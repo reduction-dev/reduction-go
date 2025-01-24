@@ -26,6 +26,10 @@ type Subject struct {
 	sinkRequests []*handlerpb.SinkRequest
 }
 
+type contextKey string
+
+var SubjectContextKey = contextKey("subject")
+
 type StateEntry struct {
 	Key   []byte
 	Value []byte

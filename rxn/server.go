@@ -5,37 +5,11 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"time"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"reduction.dev/reduction-handler/handlerpb"
 	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
 
 	"connectrpc.com/connect"
 )
-
-// The handler called as events arrive and timers fire.
-type Handler interface {
-	// When an event enters the job through the source, this method extracts or
-	// generates a key and timestamp for the event. Workers use the key to
-	// distribute events between themselves in the cluster. They use the timestamp
-	// to understand the passing of event time.
-	//
-	// This method returns a list of KeyedEvents. This allows KeyEvent to both
-	// filter out messages to avoid further processing or to expand a single event
-	// into many.
-	KeyEvent(ctx context.Context, rawEvent []byte) (keyedEvent []KeyedEvent, err error)
-
-	// Called when a new event arrives. The subject is a set of APIs scoped to
-	// the specific partition key being used. Because of this scoping, think of this
-	// as the subject (e.g. a User, a Product) in your domain.
-	OnEvent(ctx context.Context, subject *Subject, rawEvent []byte) error
-
-	// A previously set timer expires. This is an asynchronous action where the
-	// timer fires at the specified time AT THE EARLIEST. That means that events
-	// after the timer's timestamp have likely already arrived.
-	OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error
-}
 
 type newServerParams struct {
 	addr string
@@ -47,10 +21,56 @@ type HTTPServer struct {
 	listener   net.Listener
 }
 
-type KeyedEvent struct {
-	Key       []byte
-	Timestamp time.Time
-	Value     []byte
+type Option func(*HTTPServer)
+
+func Start(h Handler, opts ...Option) error {
+	server := newServer(h, newServerParams{})
+
+	for _, o := range opts {
+		o(server)
+	}
+
+	return server.Start()
+}
+
+func Close() {
+	if server != nil {
+		server.Stop()
+	}
+}
+
+func WithAddress(addr string) func(server *HTTPServer) {
+	return func(s *HTTPServer) {
+		s.addr = addr
+	}
+}
+
+func WithListener(l net.Listener) func(server *HTTPServer) {
+	return func(s *HTTPServer) {
+		s.listener = l
+	}
+}
+
+// A singleton server instance
+var server *HTTPServer
+
+// Uses a singleton, packaged scoped server
+func DefaultServer(h Handler, opts ...Option) *HTTPServer {
+	server = newServer(h, newServerParams{})
+
+	for _, o := range opts {
+		o(server)
+	}
+	return server
+}
+
+// Create a new server instance
+func NewServer(h Handler, opts ...Option) *HTTPServer {
+	server := newServer(h, newServerParams{})
+	for _, o := range opts {
+		o(server)
+	}
+	return server
 }
 
 func (s *HTTPServer) Start() error {
@@ -100,65 +120,6 @@ func newServer(handler Handler, params newServerParams) *HTTPServer {
 
 	return &HTTPServer{addr: params.addr, httpServer: s}
 }
-
-type contextKey string
-
-var SubjectContextKey = contextKey("subject")
-
-// Receive connect requests and invoke the user's handler methods.
-type rpcHandler struct {
-	rxnHandler Handler
-}
-
-func (r *rpcHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
-	results := make([]*handlerpb.KeyEventResult, 0, len(req.Msg.Values))
-	for _, value := range req.Msg.Values {
-		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
-		if err != nil {
-			return nil, err
-		}
-		pbKeyedEvents := make([]*handlerpb.KeyedEvent, len(keyedEvents))
-		for i, event := range keyedEvents {
-			pbKeyedEvents[i] = &handlerpb.KeyedEvent{
-				Key:       event.Key,
-				Timestamp: timestamppb.New(event.Timestamp),
-				Value:     event.Value,
-			}
-		}
-		results = append(results, &handlerpb.KeyEventResult{Events: pbKeyedEvents})
-	}
-
-	return connect.NewResponse(&handlerpb.KeyEventBatchResponse{
-		Results: results,
-	}), nil
-}
-
-func (r *rpcHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
-	// Track subjects by key
-	subjectBatch := newLazySubjectBatch(req.Msg.KeyStates)
-
-	for _, event := range req.Msg.Events {
-		switch typedEvent := event.Event.(type) {
-		case *handlerpb.Event_KeyedEvent:
-			subject := subjectBatch.subjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
-			ctx = context.WithValue(ctx, SubjectContextKey, subject)
-			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
-				return nil, err
-			}
-		case *handlerpb.Event_TimerExpired:
-			subject := subjectBatch.subjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
-			ctx = context.WithValue(ctx, SubjectContextKey, subject)
-			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	resp := subjectBatch.response()
-	return connect.NewResponse(resp), nil
-}
-
-var _ handlerpbconnect.HandlerHandler = (*rpcHandler)(nil)
 
 func NewLoggingInterceptor(prefix string) connect.UnaryInterceptorFunc {
 	interceptor := func(next connect.UnaryFunc) connect.UnaryFunc {
