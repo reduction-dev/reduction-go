@@ -42,26 +42,8 @@ func NewIntState(name string) *IntState {
 	return &IntState{name, 0}
 }
 
-func (s *IntState) Marshal() ([]byte, error) {
-	buf := make([]byte, 8) // 8 bytes for int64
-	binary.BigEndian.PutUint64(buf, uint64(s.Value))
-	return buf, nil
-}
-
 func (s *IntState) Name() string {
 	return s.name
-}
-
-func (s *IntState) Unmarshal(data []byte) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	if len(data) != 8 {
-		return fmt.Errorf("invalid IntState data: %s", data)
-	}
-	s.Value = int(binary.BigEndian.Uint64(data))
-	return nil
 }
 
 var _ StateItem = (*IntState)(nil)

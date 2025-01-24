@@ -193,8 +193,6 @@ func (m *PutMutation) isStateMutation() bool {
 // A named state item inside of the state scoped to a handler call.
 type StateItem interface {
 	Name() string
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
 	Load(entries []StateEntry) error
 	Mutations() ([]StateMutation, error)
 }

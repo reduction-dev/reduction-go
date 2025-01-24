@@ -88,10 +88,6 @@ func (s *MapState[K, V]) All() iter.Seq2[K, V] {
 	}
 }
 
-func (s *MapState[K, V]) Marshal() ([]byte, error) {
-	return nil, nil
-}
-
 func (s *MapState[K, V]) Mutations() ([]StateMutation, error) {
 	mutations := make([]StateMutation, 0, len(s.updates))
 	for key, update := range s.updates {
@@ -132,10 +128,6 @@ func (s *MapState[K, V]) Load(entries []StateEntry) error {
 
 func (s *MapState[K, V]) Name() string {
 	return s.name
-}
-
-func (s *MapState[K, V]) Unmarshal(data []byte) error {
-	panic("unimplemented")
 }
 
 var _ StateItem = (*MapState[any, any])(nil)
