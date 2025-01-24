@@ -1,6 +1,9 @@
 package rxn
 
 import (
+	"bytes"
+	"slices"
+	"sort"
 	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -28,42 +31,6 @@ type StateEntry struct {
 	Value []byte
 }
 
-func newSubjectFromOnEventRequest(req *handlerpb.OnEventRequest) *Subject {
-	state := make(map[string][]StateEntry, len(req.GetStateEntryNamespaces()))
-	for _, namespace := range req.GetStateEntryNamespaces() {
-		entries := make([]StateEntry, len(namespace.Entries))
-		for i, entry := range namespace.Entries {
-			entries[i] = StateEntry{Key: entry.Key, Value: entry.Value}
-		}
-		state[namespace.Namespace] = entries
-	}
-
-	return &Subject{
-		key:            req.Event.Key,
-		timestamp:      req.Event.Timestamp.AsTime(),
-		state:          state,
-		stateMutations: make(map[string][]StateMutation),
-	}
-}
-
-func newSubjectFromOnTimerExpiredRequest(req *handlerpb.OnTimerExpiredRequest) *Subject {
-	state := make(map[string][]StateEntry, len(req.StateEntryNamespaces))
-	for _, namespace := range req.StateEntryNamespaces {
-		entries := make([]StateEntry, len(namespace.Entries))
-		for i, entry := range namespace.Entries {
-			entries[i] = StateEntry{Key: entry.Key, Value: entry.Value}
-		}
-		state[namespace.Namespace] = entries
-	}
-
-	return &Subject{
-		key:            req.Key,
-		timestamp:      req.Timestamp.AsTime(),
-		state:          state,
-		stateMutations: make(map[string][]StateMutation),
-	}
-}
-
 // Register a timer that will trigger the OnTimerExpired when the watermark
 // passes the timer.
 func (s *Subject) SetTimer(timestamp time.Time) {
@@ -85,13 +52,46 @@ func (s *Subject) State(stateItem StateItem) error {
 	return stateItem.Load(stateEntries)
 }
 
-func (s *Subject) UpdateState(stateItem StateItem) error {
-	mutations, err := stateItem.Mutations()
+func (s *Subject) UpdateState(state StateItem) error {
+	currentStateEntries := s.state[state.Name()]
+
+	mutations, err := state.Mutations()
 	if err != nil {
 		return err
 	}
+	name := state.Name()
 
-	s.stateMutations[stateItem.Name()] = append(s.stateMutations[stateItem.Name()], mutations...)
+	// Create a map of existing entries by key
+	entryMap := make(map[string]StateEntry)
+	for _, entry := range currentStateEntries {
+		entryMap[string(entry.Key)] = entry
+	}
+
+	// Apply mutations to the entry map
+	for _, mutation := range mutations {
+		switch typed := mutation.(type) {
+		case *PutMutation:
+			entryMap[string(typed.Key)] = StateEntry{
+				Key:   typed.Key,
+				Value: typed.Value,
+			}
+		case *DeleteMutation:
+			delete(entryMap, string(typed.Key))
+		}
+	}
+
+	// Convert map back to slice
+	newEntries := make([]StateEntry, 0, len(entryMap))
+	for _, entry := range entryMap {
+		newEntries = append(newEntries, entry)
+	}
+	slices.SortFunc(newEntries, func(a, b StateEntry) int {
+		return bytes.Compare(a.Key, b.Key)
+	})
+
+	// Update the state map
+	s.state[name] = newEntries
+	s.stateMutations[name] = append(s.stateMutations[name], mutations...)
 	return nil
 }
 
@@ -99,26 +99,50 @@ func (s *Subject) AddSinkRequest(sinkID string, event []byte) {
 	s.sinkRequests = append(s.sinkRequests, &handlerpb.SinkRequest{Id: sinkID, Value: event})
 }
 
-func (s *Subject) encode() *handlerpb.HandlerResponse {
-	ret := &handlerpb.HandlerResponse{}
+func (s *Subject) encode() *handlerpb.KeyResult {
+	ret := &handlerpb.KeyResult{Key: s.key}
 	ret.NewTimers = make([]*timestamppb.Timestamp, len(s.timers))
 	for i, t := range s.timers {
 		ret.NewTimers[i] = timestamppb.New(t)
 	}
 
 	ret.StateMutationNamespaces = make([]*handlerpb.StateMutationNamespace, len(s.stateMutations))
+	var idx int
 	for ns, mutations := range s.stateMutations {
+		// Coalesce mutations by key
+		latest := make(map[string]StateMutation)
+		for _, m := range mutations {
+			switch typed := m.(type) {
+			case *PutMutation:
+				latest[string(typed.Key)] = m
+			case *DeleteMutation:
+				latest[string(typed.Key)] = m
+			}
+		}
+
+		// Convert to sorted slice
+		keys := make([]string, 0, len(latest))
+		for k := range latest {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		coalesced := make([]StateMutation, 0, len(latest))
+		for _, k := range keys {
+			coalesced = append(coalesced, latest[k])
+		}
+
 		// Create a protobuf namespace
 		pbNamespace := &handlerpb.StateMutationNamespace{
 			Namespace: ns,
-			Mutations: make([]*handlerpb.StateMutation, len(mutations)),
+			Mutations: make([]*handlerpb.StateMutation, len(coalesced)),
 		}
 		for i := range pbNamespace.Mutations {
 			pbNamespace.Mutations[i] = &handlerpb.StateMutation{}
 		}
 
 		// Assign oneof mutation types
-		for i, mutation := range mutations {
+		for i, mutation := range coalesced {
 			switch typedMutation := mutation.(type) {
 			case *PutMutation:
 				pbNamespace.Mutations[i].Mutation = &handlerpb.StateMutation_Put{
@@ -135,10 +159,9 @@ func (s *Subject) encode() *handlerpb.HandlerResponse {
 				}
 			}
 		}
-		ret.StateMutationNamespaces = append(ret.StateMutationNamespaces, pbNamespace)
+		ret.StateMutationNamespaces[idx] = pbNamespace
+		idx++
 	}
-
-	ret.SinkRequests = s.sinkRequests
 
 	return ret
 }
