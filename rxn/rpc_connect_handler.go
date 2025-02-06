@@ -5,16 +5,17 @@ import (
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-handler/handlerpb"
 	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
 )
 
 // Receive connect requests and invoke the user's handler methods.
-type rpcHandler struct {
+type rpcConnectHandler struct {
 	rxnHandler Handler
 }
 
-func (r *rpcHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
+func (r *rpcConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
 	results := make([]*handlerpb.KeyEventResult, 0, len(req.Msg.Values))
 	for _, value := range req.Msg.Values {
 		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
@@ -37,32 +38,32 @@ func (r *rpcHandler) KeyEventBatch(ctx context.Context, req *connect.Request[han
 	}), nil
 }
 
-func (r *rpcHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
+func (r *rpcConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
 	// Track subjects by key
-	subjectBatch := newLazySubjectBatch(req.Msg.KeyStates)
+	subjectBatch := internal.NewLazySubjectBatch(req.Msg.KeyStates)
 	watermark := req.Msg.Watermark.AsTime()
 
 	for _, event := range req.Msg.Events {
 		switch typedEvent := event.Event.(type) {
 		case *handlerpb.Event_KeyedEvent:
-			subject := subjectBatch.subjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
-			ctx = context.WithValue(ctx, SubjectContextKey, subject)
-			ctx = context.WithValue(ctx, WatermarkContextKey, watermark)
+			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
+			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
 				return nil, err
 			}
 		case *handlerpb.Event_TimerExpired:
-			subject := subjectBatch.subjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
-			ctx = context.WithValue(ctx, SubjectContextKey, subject)
-			ctx = context.WithValue(ctx, WatermarkContextKey, watermark)
+			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
+			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	resp := subjectBatch.response()
+	resp := subjectBatch.Response()
 	return connect.NewResponse(resp), nil
 }
 
-var _ handlerpbconnect.HandlerHandler = (*rpcHandler)(nil)
+var _ handlerpbconnect.HandlerHandler = (*rpcConnectHandler)(nil)

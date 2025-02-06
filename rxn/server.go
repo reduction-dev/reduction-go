@@ -106,7 +106,7 @@ func newServer(handler Handler, params newServerParams) *HTTPServer {
 	mux := http.NewServeMux()
 
 	// Add connect service to mux
-	path, connectHandler := handlerpbconnect.NewHandlerHandler(&rpcHandler{
+	path, connectHandler := handlerpbconnect.NewHandlerHandler(&rpcConnectHandler{
 		rxnHandler: handler,
 	}, connect.WithInterceptors(NewLoggingInterceptor("handler")))
 	mux.Handle(path, connectHandler)

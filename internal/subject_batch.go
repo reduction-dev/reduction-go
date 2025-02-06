@@ -1,4 +1,4 @@
-package rxn
+package internal
 
 import (
 	"time"
@@ -11,7 +11,7 @@ type lazySubjectBatch struct {
 	state    map[string]map[string][]StateEntry // <subject-key>:<state-id>:<state-entries>
 }
 
-func newLazySubjectBatch(keyStates []*handlerpb.KeyState) *lazySubjectBatch {
+func NewLazySubjectBatch(keyStates []*handlerpb.KeyState) *lazySubjectBatch {
 	state := make(map[string]map[string][]StateEntry, len(keyStates))
 	for _, keyState := range keyStates {
 		// Initialize inner map for this key
@@ -31,7 +31,7 @@ func newLazySubjectBatch(keyStates []*handlerpb.KeyState) *lazySubjectBatch {
 	}
 }
 
-func (sb *lazySubjectBatch) subjectFor(key []byte, timestamp time.Time) *Subject {
+func (sb *lazySubjectBatch) SubjectFor(key []byte, timestamp time.Time) *Subject {
 	if subject, ok := sb.subjects[string(key)]; ok {
 		subject.timestamp = timestamp
 		return subject
@@ -46,7 +46,7 @@ func (sb *lazySubjectBatch) subjectFor(key []byte, timestamp time.Time) *Subject
 	return subject
 }
 
-func (sb *lazySubjectBatch) response() *handlerpb.ProcessEventBatchResponse {
+func (sb *lazySubjectBatch) Response() *handlerpb.ProcessEventBatchResponse {
 	resp := &handlerpb.ProcessEventBatchResponse{}
 	for _, subject := range sb.subjects {
 		resp.SinkRequests = append(resp.SinkRequests, subject.sinkRequests...)

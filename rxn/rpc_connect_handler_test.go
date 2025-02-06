@@ -17,7 +17,7 @@ import (
 
 func TestProcessEventBatch_ProcessKeyedEvent(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				subject.SetTimer(now.Add(time.Hour))
@@ -60,7 +60,7 @@ func TestProcessEventBatch_ProcessKeyedEvent(t *testing.T) {
 
 func TestProcessEventBatch_ProcessTimerExpired(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onTimerExpiredFunc: func(ctx context.Context, subject *Subject, timer time.Time) error {
 				subject.AddSinkRequest("timer-sink", []byte("timer-output"))
@@ -98,7 +98,7 @@ func TestProcessEventBatch_ProcessTimerExpired(t *testing.T) {
 
 func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})
@@ -157,7 +157,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 
 func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})
@@ -228,7 +228,7 @@ func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 }
 
 func TestProcessEventBatch_EmptyRequest(t *testing.T) {
-	rpcHandler := &rpcHandler{rxnHandler: &rxnHandler{}}
+	rpcHandler := &rpcConnectHandler{rxnHandler: &rxnHandler{}}
 
 	got, err := rpcHandler.ProcessEventBatch(context.Background(), connect.NewRequest(&handlerpb.ProcessEventBatchRequest{}))
 	if err != nil {
@@ -241,7 +241,7 @@ func TestProcessEventBatch_EmptyRequest(t *testing.T) {
 
 func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				subject.AddSinkRequest("keyed-sink", []byte("keyed-output"))
@@ -294,7 +294,7 @@ func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 
 func TestProcessEventBatch_MultipleKeys(t *testing.T) {
 	now := time.Now().UTC()
-	rpcHandler := &rpcHandler{
+	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})

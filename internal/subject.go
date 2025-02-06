@@ -1,4 +1,4 @@
-package rxn
+package internal
 
 import (
 	"bytes"

@@ -3,6 +3,8 @@ package rxn
 import (
 	"context"
 	"time"
+
+	"reduction.dev/reduction-go/internal/types"
 )
 
 // The handler called as events arrive and timers fire.
@@ -28,11 +30,7 @@ type Handler interface {
 	OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error
 }
 
-type KeyedEvent struct {
-	Key       []byte
-	Timestamp time.Time
-	Value     []byte
-}
+type KeyedEvent = types.KeyedEvent
 
 type UnimplementedHandler struct{}
 
@@ -49,13 +47,3 @@ func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *Subje
 }
 
 var _ Handler = UnimplementedHandler{}
-
-var WatermarkContextKey = contextKey("watermark")
-
-func CurrentWatermark(ctx context.Context) time.Time {
-	watermark, ok := ctx.Value(WatermarkContextKey).(time.Time)
-	if !ok {
-		panic("missing watermark in context")
-	}
-	return watermark
-}
