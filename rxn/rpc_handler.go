@@ -40,18 +40,21 @@ func (r *rpcHandler) KeyEventBatch(ctx context.Context, req *connect.Request[han
 func (r *rpcHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
 	// Track subjects by key
 	subjectBatch := newLazySubjectBatch(req.Msg.KeyStates)
+	watermark := req.Msg.Watermark.AsTime()
 
 	for _, event := range req.Msg.Events {
 		switch typedEvent := event.Event.(type) {
 		case *handlerpb.Event_KeyedEvent:
 			subject := subjectBatch.subjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
 				return nil, err
 			}
 		case *handlerpb.Event_TimerExpired:
 			subject := subjectBatch.subjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
 				return nil, err
 			}

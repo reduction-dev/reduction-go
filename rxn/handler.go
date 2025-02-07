@@ -49,3 +49,13 @@ func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *Subje
 }
 
 var _ Handler = UnimplementedHandler{}
+
+var WatermarkContextKey = contextKey("watermark")
+
+func CurrentWatermark(ctx context.Context) time.Time {
+	watermark, ok := ctx.Value(WatermarkContextKey).(time.Time)
+	if !ok {
+		panic("missing watermark in context")
+	}
+	return watermark
+}
