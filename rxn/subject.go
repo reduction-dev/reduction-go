@@ -51,7 +51,7 @@ func (s *Subject) Timestamp() time.Time {
 	return s.timestamp
 }
 
-func (s *Subject) State(stateItem StateItem) error {
+func (s *Subject) LoadState(stateItem StateItem) error {
 	stateEntries := s.state[stateItem.Name()]
 	return stateItem.Load(stateEntries)
 }

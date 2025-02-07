@@ -102,7 +102,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})
-				if err := subject.State(state); err != nil {
+				if err := subject.LoadState(state); err != nil {
 					return err
 				}
 				state.Set("count", 42)
@@ -161,7 +161,7 @@ func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})
-				if err := subject.State(state); err != nil {
+				if err := subject.LoadState(state); err != nil {
 					return err
 				}
 
@@ -298,7 +298,7 @@ func TestProcessEventBatch_MultipleKeys(t *testing.T) {
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
 				state := NewMapState("test-state", MapStringIntCodec{})
-				if err := subject.State(state); err != nil {
+				if err := subject.LoadState(state); err != nil {
 					return err
 				}
 				count, _ := state.Get("count")
