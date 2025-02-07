@@ -136,18 +136,21 @@ func (r *rpcPipeHandler) handleProcessEventBatch(ctx context.Context, data []byt
 	}
 
 	subjectBatch := internal.NewLazySubjectBatch(req.KeyStates)
+	watermark := req.Watermark.AsTime()
 
 	for _, event := range req.Events {
 		switch typedEvent := event.Event.(type) {
 		case *handlerpb.Event_KeyedEvent:
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
 				return err
 			}
 		case *handlerpb.Event_TimerExpired:
 			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
+			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
 				return err
 			}
