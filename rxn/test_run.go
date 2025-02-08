@@ -15,10 +15,11 @@ import (
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-handler/handlerpb"
+	"reduction.dev/reduction-handler/testrunpb"
 )
 
 type TestRunNext struct {
-	messages [][]byte
+	commands [][]byte
 	job      *jobs.Job
 	err      error
 	handler  *types.SynthesizedHandler
@@ -26,7 +27,7 @@ type TestRunNext struct {
 
 func NewTestRun(job *jobs.Job) *TestRunNext {
 	tr := &TestRunNext{
-		messages: make([][]byte, 0),
+		commands: make([][]byte, 0),
 		job:      job,
 	}
 	handler, err := job.Synthesize()
@@ -51,19 +52,23 @@ func (t *TestRunNext) AddRecord(record []byte) {
 	}
 
 	for _, ke := range keyedEvents {
-		msgData, err := proto.Marshal(&handlerpb.KeyedEvent{
-			Key:       ke.Key,
-			Timestamp: timestamppb.New(ke.Timestamp),
-			Value:     ke.Value,
-		})
+		cmd := &testrunpb.RunnerCommand{
+			Command: &testrunpb.RunnerCommand_AddKeyedEvent{
+				AddKeyedEvent: &testrunpb.AddKeyedEvent{
+					KeyedEvent: &handlerpb.KeyedEvent{
+						Key:       ke.Key,
+						Timestamp: timestamppb.New(ke.Timestamp),
+						Value:     ke.Value,
+					},
+				},
+			},
+		}
+		msgData, err := proto.Marshal(cmd)
 		if err != nil {
-			t.err = fmt.Errorf("failed to marshal record: %w", err)
+			t.err = fmt.Errorf("failed to marshal command: %w", err)
 			return
 		}
-		message := make([]byte, 1+len(msgData))
-		message[0] = messageTypeAddKeyedEvent
-		copy(message[1:], msgData) // Add this line to copy the marshaled data
-		t.messages = append(t.messages, message)
+		t.commands = append(t.commands, msgData)
 	}
 }
 
@@ -72,8 +77,17 @@ func (t *TestRunNext) AddWatermark() {
 		return
 	}
 
-	message := []byte{messageTypeAddWatermark}
-	t.messages = append(t.messages, message)
+	cmd := &testrunpb.RunnerCommand{
+		Command: &testrunpb.RunnerCommand_AddWatermark{
+			AddWatermark: &testrunpb.AddWatermark{},
+		},
+	}
+	msgData, err := proto.Marshal(cmd)
+	if err != nil {
+		t.err = fmt.Errorf("failed to marshal command: %w", err)
+		return
+	}
+	t.commands = append(t.commands, msgData)
 }
 
 func (t *TestRunNext) Run() error {
@@ -81,27 +95,36 @@ func (t *TestRunNext) Run() error {
 		return t.err
 	}
 
-	// Add end of messages message
-	t.messages = append(t.messages, []byte{messageTypeEndOfMessages})
+	// Add Run command
+	cmd := &testrunpb.RunnerCommand{
+		Command: &testrunpb.RunnerCommand_Run{
+			Run: &testrunpb.Run{},
+		},
+	}
+	msgData, err := proto.Marshal(cmd)
+	if err != nil {
+		return fmt.Errorf("failed to marshal run command: %w", err)
+	}
+	t.commands = append(t.commands, msgData)
 
-	cmd := exec.Command("reduction", "testrun")
+	trCmd := exec.Command("reduction", "testrun")
 
-	stdin, err := cmd.StdinPipe()
+	stdin, err := trCmd.StdinPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stdin pipe: %w", err)
 	}
 
-	stdout, err := cmd.StdoutPipe()
+	stdout, err := trCmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stdout pipe: %w", err)
 	}
 
-	stderrPipe, err := cmd.StderrPipe()
+	stderrPipe, err := trCmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
 
-	if err := cmd.Start(); err != nil {
+	if err := trCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 
@@ -114,8 +137,8 @@ func (t *TestRunNext) Run() error {
 		io.Copy(io.MultiWriter(&stderr, os.Stderr), stderrPipe)
 	}()
 
-	// Write messages
-	for _, msg := range t.messages {
+	// Write commands
+	for _, msg := range t.commands {
 		if err := binary.Write(stdin, binary.BigEndian, uint32(len(msg))); err != nil {
 			return fmt.Errorf("failed to write message length: %w", err)
 		}
@@ -139,7 +162,7 @@ func (t *TestRunNext) Run() error {
 	stderrWG.Wait()
 
 	// Check command exit status, including stderr if there was an error
-	if err := cmd.Wait(); err != nil {
+	if err := trCmd.Wait(); err != nil {
 		return &commandError{
 			err:    err,
 			stderr: stderr.Bytes(),
@@ -159,12 +182,6 @@ func TestRun(job *jobs.Job, events [][]byte) error {
 
 	return t.Run()
 }
-
-const (
-	messageTypeEndOfMessages = 0x00
-	messageTypeAddKeyedEvent = 0x01
-	messageTypeAddWatermark  = 0x02
-)
 
 type commandError struct {
 	err    error
