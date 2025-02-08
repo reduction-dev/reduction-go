@@ -15,9 +15,11 @@ type PrintSink struct {
 	ID string
 }
 
-func NewPrintSink(ctx *jobs.JobContext, id string) *PrintSink {
+type PrintSinkEvent []byte
+
+func NewPrintSink(job *jobs.Job, id string) *PrintSink {
 	sink := &PrintSink{ID: id}
-	ctx.RegisterSink(sink)
+	job.RegisterSink(sink)
 	return sink
 }
 
@@ -33,19 +35,7 @@ func (s *PrintSink) Synthesize() types.SinkSynthesis {
 	}
 }
 
-func (s *PrintSink) Runtime(ctx *types.OperatorContext) *PrintSinkRuntime {
-	sink := &PrintSinkRuntime{ID: s.ID}
-	ctx.RegisterSink(s)
-	return sink
-}
-
-type PrintSinkRuntime struct {
-	ID string
-}
-
-type PrintSinkEvent []byte
-
-func (s *PrintSinkRuntime) Collect(ctx context.Context, event PrintSinkEvent) {
+func (s *PrintSink) Collect(ctx context.Context, event PrintSinkEvent) {
 	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
 	if !ok {
 		panic("must pass rxn context to sink.Collect")

@@ -4,24 +4,16 @@ import "reduction.dev/reduction-go/internal/types"
 
 type Operator = types.Operator
 
-type OperatorConfig struct {
+type OperatorParams struct {
 	Parallelism int
 	Handler     types.OperatorHandler
 }
 
-type OperatorContext = types.OperatorContext
-
-type OperatorBuilder func(ctx *types.OperatorContext) *OperatorConfig
-
-func NewOperator(ctx *JobContext, id string, builder OperatorBuilder) *Operator {
-	opCtx := &types.OperatorContext{}
-	config := builder(opCtx)
-
+func NewOperator(job *Job, id string, params *OperatorParams) *Operator {
 	operator := &types.Operator{
 		ID:          id,
-		Parallelism: config.Parallelism,
-		Handler:     config.Handler,
-		Sinks:       opCtx.Sinks,
+		Parallelism: params.Parallelism,
+		Handler:     params.Handler,
 	}
 
 	return operator

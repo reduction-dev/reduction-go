@@ -9,7 +9,7 @@ import (
 
 type Source interface {
 	Synthesize() SourceSynthesis
-	AddOperator(operator *Operator)
+	Connect(operator *Operator)
 }
 
 type Sink interface {

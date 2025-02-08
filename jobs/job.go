@@ -14,56 +14,16 @@ type Job struct {
 	WorkingStorageLocation string
 
 	sources []Source
-	sinks   []SinkSynthesizer
+	sinks   []types.SinkSynthesizer
 	doc     document
 }
 
-type JobConfig struct {
-	WorkerCount            int
-	KeyGroupCount          int
-	WorkingStorageLocation string
+func (j *Job) RegisterSource(source Source) {
+	j.sources = append(j.sources, source)
 }
 
-type JobContext struct {
-	sources []Source
-	sinks   []SinkSynthesizer
-}
-
-func (c *JobContext) RegisterSource(source Source) {
-	c.sources = append(c.sources, source)
-}
-
-type SinkSynthesizer interface {
-	Synthesize() types.SinkSynthesis
-}
-
-func (c *JobContext) RegisterSink(sink SinkSynthesizer) {
-	c.sinks = append(c.sinks, sink)
-}
-
-type JobBuilder func(ctx *JobContext) *JobConfig
-
-func NewJob(id string, builder JobBuilder) *Job {
-	ctx := &JobContext{}
-	config := builder(ctx)
-
-	job := &Job{
-		WorkerCount:            config.WorkerCount,
-		KeyGroupCount:          config.KeyGroupCount,
-		WorkingStorageLocation: config.WorkingStorageLocation,
-	}
-
-	// Transfer registrations from context to job
-	job.sources = ctx.sources
-	job.sinks = ctx.sinks
-
-	job.doc = document{
-		Job: types.Construct{
-			Type: "Job",
-			ID:   id,
-		},
-	}
-	return job
+func (j *Job) RegisterSink(sink types.SinkSynthesizer) {
+	j.sinks = append(j.sinks, sink)
 }
 
 func (j *Job) Marshal() []byte {

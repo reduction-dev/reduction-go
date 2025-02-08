@@ -37,7 +37,7 @@ func NewKinesisSource(id string, params *KinesisSourceParams) *KinesisSource {
 	}
 }
 
-func (s *KinesisSource) AddOperator(operator *types.Operator) {
+func (s *KinesisSource) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 

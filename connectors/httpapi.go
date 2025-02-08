@@ -18,12 +18,12 @@ type HTTPAPISink struct {
 	addr string
 }
 
-func NewHTTPAPISink(ctx *jobs.JobContext, id string, params *HTTPAPISinkParams) *HTTPAPISink {
+func NewHTTPAPISink(job *jobs.Job, id string, params *HTTPAPISinkParams) *HTTPAPISink {
 	sink := &HTTPAPISink{
 		id:   id,
 		addr: params.Addr,
 	}
-	ctx.RegisterSink(sink)
+	job.RegisterSink(sink)
 	return sink
 }
 
@@ -81,33 +81,30 @@ func (s *HTTPAPISinkRuntime) Collect(ctx context.Context, event *HTTPSinkEvent) 
 
 type HTTPAPISource struct {
 	id        string
-	Addr      string
-	Topics    []string
-	KeyEvent  func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
+	addr      string
+	topics    []string
+	keyEvent  func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 	operators []*types.Operator
 }
 
-type HTTPAPISourceConfig struct {
+type HTTPAPISourceParams struct {
 	Addr     string
 	Topics   []string
 	KeyEvent func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-type HTTPAPISourceBuilder func() *HTTPAPISourceConfig
-
-func NewHTTPAPISource(ctx *jobs.JobContext, id string, builder HTTPAPISourceBuilder) *HTTPAPISource {
-	config := builder()
+func NewHTTPAPISource(job *jobs.Job, id string, params *HTTPAPISourceParams) *HTTPAPISource {
 	source := &HTTPAPISource{
 		id:       id,
-		Addr:     config.Addr,
-		Topics:   config.Topics,
-		KeyEvent: config.KeyEvent,
+		addr:     params.Addr,
+		topics:   params.Topics,
+		keyEvent: params.KeyEvent,
 	}
-	ctx.RegisterSource(source)
+	job.RegisterSource(source)
 	return source
 }
 
-func (s *HTTPAPISource) AddOperator(operator *types.Operator) {
+func (s *HTTPAPISource) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
@@ -117,11 +114,11 @@ func (s *HTTPAPISource) Synthesize() types.SourceSynthesis {
 			ID:   s.id,
 			Type: "Source:HTTPAPI",
 			Params: map[string]any{
-				"Addr":   s.Addr,
-				"Topics": s.Topics,
+				"Addr":   s.addr,
+				"Topics": s.topics,
 			},
 		},
-		KeyEventFunc: s.KeyEvent,
+		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
 	}
 }

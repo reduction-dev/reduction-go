@@ -21,3 +21,7 @@ func (o *Operator) Synthesize() OperatorSynthesis {
 		Handler: o.Handler,
 	}
 }
+
+func (op *Operator) Connect(sink SinkSynthesizer) {
+	op.Sinks = append(op.Sinks, sink)
+}

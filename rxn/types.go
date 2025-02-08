@@ -24,5 +24,6 @@ type StateMutation = internal.StateMutation
 type PutMutation = internal.PutMutation
 type DeleteMutation = internal.DeleteMutation
 type StateItem = internal.StateItem
+type OperatorHandler = types.OperatorHandler
 
 var CurrentWatermark = internal.CurrentWatermark

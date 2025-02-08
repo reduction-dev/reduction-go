@@ -9,36 +9,33 @@ import (
 
 type EmbeddedSource struct {
 	id         string
-	SplitCount int
-	BatchSize  int
-	Generator  string
-	KeyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
+	splitCount int
+	batchSize  int
+	generator  string
+	keyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 	operators  []*types.Operator
 }
 
-type EmbeddedSourceConfig struct {
+type EmbeddedSourceParams struct {
 	SplitCount int
 	BatchSize  int
 	Generator  string
 	KeyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-type EmbeddedSourceBuilder func() *EmbeddedSourceConfig
-
-func NewEmbeddedSource(ctx *jobs.JobContext, id string, builder EmbeddedSourceBuilder) *EmbeddedSource {
-	config := builder()
+func NewEmbeddedSource(job *jobs.Job, id string, params *EmbeddedSourceParams) *EmbeddedSource {
 	source := &EmbeddedSource{
 		id:         id,
-		SplitCount: config.SplitCount,
-		BatchSize:  config.BatchSize,
-		Generator:  config.Generator,
-		KeyEvent:   config.KeyEvent,
+		splitCount: params.SplitCount,
+		batchSize:  params.BatchSize,
+		generator:  params.Generator,
+		keyEvent:   params.KeyEvent,
 	}
-	ctx.RegisterSource(source)
+	job.RegisterSource(source)
 	return source
 }
 
-func (s *EmbeddedSource) AddOperator(operator *types.Operator) {
+func (s *EmbeddedSource) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
@@ -48,12 +45,12 @@ func (s *EmbeddedSource) Synthesize() types.SourceSynthesis {
 			ID:   s.id,
 			Type: "Source:Embedded",
 			Params: map[string]any{
-				"SplitCount": s.SplitCount,
-				"BatchSize":  s.BatchSize,
-				"Generator":  s.Generator,
+				"SplitCount": s.splitCount,
+				"BatchSize":  s.batchSize,
+				"Generator":  s.generator,
 			},
 		},
-		KeyEventFunc: s.KeyEvent,
+		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
 	}
 }
