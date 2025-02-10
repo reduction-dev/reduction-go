@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/proto"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
-	"reduction.dev/reduction-go/rxnerr"
 	"reduction.dev/reduction-protocol/kinesispb"
 )
 
@@ -58,7 +58,7 @@ func (s *KinesisSource) Synthesize() types.SourceSynthesis {
 		KeyEventFunc: func(ctx context.Context, record []byte) ([]types.KeyedEvent, error) {
 			var pbRecord kinesispb.Record
 			if err := proto.Unmarshal(record, &pbRecord); err != nil {
-				return nil, rxnerr.NewBadRequestErrorf("failed to unmarshal record: %v", err)
+				return nil, internal.NewBadRequestErrorf("failed to unmarshal record: %v", err)
 			}
 			kinesisRecord := &KinesisRecord{
 				Data:      pbRecord.Data,

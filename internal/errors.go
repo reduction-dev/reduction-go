@@ -1,4 +1,4 @@
-package rxnerr
+package internal
 
 import (
 	"fmt"

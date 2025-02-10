@@ -7,7 +7,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/rxnerr"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 )
@@ -69,7 +68,7 @@ func (r *rpcConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.
 }
 
 func handleError(err error) error {
-	if rxnErr, ok := err.(*rxnerr.Error); ok {
+	if rxnErr, ok := err.(*internal.Error); ok {
 		return connect.NewError(connect.CodeInvalidArgument, rxnErr)
 	}
 	return err
