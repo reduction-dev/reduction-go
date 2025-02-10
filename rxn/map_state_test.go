@@ -8,7 +8,7 @@ import (
 )
 
 func TestMapState_PutMutation(t *testing.T) {
-	state := rxn.NewMapState("id", codec)
+	state := rxn.NewMapState("id", rxn.WithCodec(codec))
 	state.Set("k1", "v1")
 
 	mutations, err := state.Mutations()
@@ -30,7 +30,7 @@ func TestMapState_PutMutation(t *testing.T) {
 }
 
 func TestMapState_DeleteMutation(t *testing.T) {
-	state := rxn.NewMapState("id", codec)
+	state := rxn.NewMapState("id", rxn.WithCodec(codec))
 	state.Load([]rxn.StateEntry{{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
@@ -55,7 +55,7 @@ func TestMapState_DeleteMutation(t *testing.T) {
 }
 
 func TestMapState_All(t *testing.T) {
-	state := rxn.NewMapState("id", codec)
+	state := rxn.NewMapState("id", rxn.WithCodec(codec))
 	state.Load([]rxn.StateEntry{{
 		Key: []byte("unchanged"), Value: []byte("unchanged"),
 	}, {

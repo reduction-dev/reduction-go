@@ -101,7 +101,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
-				state := NewMapState("test-state", MapStringIntCodec{})
+				state := NewMapState("test-state", WithCodec(MapStringIntCodec{}))
 				if err := subject.LoadState(state); err != nil {
 					return err
 				}
@@ -160,7 +160,7 @@ func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
-				state := NewMapState("test-state", MapStringIntCodec{})
+				state := NewMapState("test-state", WithCodec(MapStringIntCodec{}))
 				if err := subject.LoadState(state); err != nil {
 					return err
 				}
@@ -297,7 +297,7 @@ func TestProcessEventBatch_MultipleKeys(t *testing.T) {
 	rpcHandler := &rpcConnectHandler{
 		rxnHandler: &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *Subject, rawEvent []byte) error {
-				state := NewMapState("test-state", MapStringIntCodec{})
+				state := NewMapState("test-state", WithCodec(MapStringIntCodec{}))
 				if err := subject.LoadState(state); err != nil {
 					return err
 				}
