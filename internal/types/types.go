@@ -34,8 +34,7 @@ type SourceSynthesis struct {
 }
 
 type SinkSynthesis struct {
-	Construct    Construct
-	KeyEventFunc func(ctx context.Context, record []byte) ([]KeyedEvent, error)
+	Construct Construct
 }
 
 // Construct defines the format for each abstract type

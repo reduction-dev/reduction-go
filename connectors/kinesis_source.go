@@ -6,6 +6,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/rxnerr"
 	"reduction.dev/reduction-handler/kinesispb"
 )
 
@@ -28,13 +30,15 @@ type KinesisSourceParams struct {
 	KeyEvent  func(ctx context.Context, record *KinesisRecord) ([]types.KeyedEvent, error)
 }
 
-func NewKinesisSource(id string, params *KinesisSourceParams) *KinesisSource {
-	return &KinesisSource{
+func NewKinesisSource(job *jobs.Job, id string, params *KinesisSourceParams) *KinesisSource {
+	source := &KinesisSource{
 		id:        id,
 		streamARN: params.StreamARN,
 		endpoint:  params.Endpoint,
 		keyEvent:  params.KeyEvent,
 	}
+	job.RegisterSource(source)
+	return source
 }
 
 func (s *KinesisSource) Connect(operator *types.Operator) {
@@ -54,7 +58,7 @@ func (s *KinesisSource) Synthesize() types.SourceSynthesis {
 		KeyEventFunc: func(ctx context.Context, record []byte) ([]types.KeyedEvent, error) {
 			var pbRecord kinesispb.Record
 			if err := proto.Unmarshal(record, &pbRecord); err != nil {
-				return nil, err
+				return nil, rxnerr.NewBadRequestErrorf("failed to unmarshal record: %v", err)
 			}
 			kinesisRecord := &KinesisRecord{
 				Data:      pbRecord.Data,

@@ -9,9 +9,10 @@ import (
 )
 
 type Job struct {
-	WorkerCount            int
-	KeyGroupCount          int
-	WorkingStorageLocation string
+	WorkerCount              int
+	KeyGroupCount            int
+	WorkingStorageLocation   string
+	SavepointStorageLocation string
 
 	sources []Source
 	sinks   []types.SinkSynthesizer
@@ -27,6 +28,11 @@ func (j *Job) RegisterSink(sink types.SinkSynthesizer) {
 }
 
 func (j *Job) Marshal() []byte {
+	// Call Synthesize to ensure the document is up to date
+	_, err := j.Synthesize()
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal job: %v", err))
+	}
 	return j.doc.Marshal()
 }
 
@@ -59,11 +65,12 @@ func (j *Job) Synthesize() (*types.SynthesizedHandler, error) {
 	j.doc.Sources = sourceConstructs
 	j.doc.Sinks = sinkConstructs
 	j.doc.Job.Params = map[string]any{
-		"WorkerCount":            j.WorkerCount,
-		"KeyGroupCount":          j.KeyGroupCount,
-		"WorkingStorageLocation": j.WorkingStorageLocation,
-		"SourceIDs":              sourceIDs,
-		"SinkIDs":                sinkIDs,
+		"WorkerCount":              j.WorkerCount,
+		"KeyGroupCount":            j.KeyGroupCount,
+		"WorkingStorageLocation":   j.WorkingStorageLocation,
+		"SavepointStorageLocation": j.SavepointStorageLocation,
+		"SourceIDs":                sourceIDs,
+		"SinkIDs":                  sinkIDs,
 	}
 
 	sourceSynth := j.sources[0].Synthesize()

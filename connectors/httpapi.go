@@ -17,6 +17,16 @@ type HTTPAPISink struct {
 	id   string
 	addr string
 }
+type HTTPAPISinkParams struct {
+	Addr string
+}
+
+type HTTPSinkEvent struct {
+	// A namespace for writing the record
+	Topic string
+	// Arbitrary data to send to the server
+	Data []byte
+}
 
 func NewHTTPAPISink(job *jobs.Job, id string, params *HTTPAPISinkParams) *HTTPAPISink {
 	sink := &HTTPAPISink{
@@ -25,10 +35,6 @@ func NewHTTPAPISink(job *jobs.Job, id string, params *HTTPAPISinkParams) *HTTPAP
 	}
 	job.RegisterSink(sink)
 	return sink
-}
-
-type HTTPAPISinkParams struct {
-	Addr string
 }
 
 func (s *HTTPAPISink) Synthesize() types.SinkSynthesis {
@@ -43,39 +49,20 @@ func (s *HTTPAPISink) Synthesize() types.SinkSynthesis {
 	}
 }
 
-func (s *HTTPAPISink) Runtime(ctx *types.OperatorContext) *HTTPAPISinkRuntime {
-	sink := &HTTPAPISinkRuntime{ID: s.id}
-	ctx.RegisterSink(s)
-	return sink
-}
-
-var _ types.SinkRuntime[*HTTPSinkEvent] = (*HTTPAPISinkRuntime)(nil)
-
-// Sink Runtime
-
-type HTTPAPISinkRuntime struct {
-	ID string
-}
-
-type HTTPSinkEvent struct {
-	// A namespace for writing the record
-	Topic string
-	// Arbitrary data to send to the server
-	Data []byte
-}
-
-func (s *HTTPAPISinkRuntime) Collect(ctx context.Context, event *HTTPSinkEvent) {
+func (s *HTTPAPISink) Collect(ctx context.Context, value *HTTPSinkEvent) {
 	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
 	if !ok {
 		panic("must pass rxn context to sink.Collect")
 	}
 
-	payload, err := json.Marshal(event)
+	payload, err := json.Marshal(value)
 	if err != nil {
 		log.Fatal("httpapi Sink json.Marshal", "err", err)
 	}
-	subject.AddSinkRequest(s.ID, payload)
+	subject.AddSinkRequest(s.id, payload)
 }
+
+var _ types.SinkRuntime[*HTTPSinkEvent] = (*HTTPAPISink)(nil)
 
 // Source Buildtime Config
 

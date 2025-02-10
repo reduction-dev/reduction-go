@@ -6,6 +6,7 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/rxnerr"
 	"reduction.dev/reduction-handler/handlerpb"
 	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
 )
@@ -20,7 +21,7 @@ func (r *rpcConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Requ
 	for _, value := range req.Msg.Values {
 		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
 		if err != nil {
-			return nil, err
+			return nil, handleError(err)
 		}
 		pbKeyedEvents := make([]*handlerpb.KeyedEvent, len(keyedEvents))
 		for i, event := range keyedEvents {
@@ -50,20 +51,27 @@ func (r *rpcConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
 			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
-				return nil, err
+				return nil, handleError(err)
 			}
 		case *handlerpb.Event_TimerExpired:
 			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
 			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
-				return nil, err
+				return nil, handleError(err)
 			}
 		}
 	}
 
 	resp := subjectBatch.Response()
 	return connect.NewResponse(resp), nil
+}
+
+func handleError(err error) error {
+	if rxnErr, ok := err.(*rxnerr.Error); ok {
+		return connect.NewError(connect.CodeInvalidArgument, rxnErr)
+	}
+	return err
 }
 
 var _ handlerpbconnect.HandlerHandler = (*rpcConnectHandler)(nil)
