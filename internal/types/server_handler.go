@@ -1,14 +1,16 @@
-package rxn
+package types
 
 import (
 	"context"
 	"time"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 )
 
-// The handler called as events arrive and timers fire.
-type Handler interface {
+// The ServerHandler represented the synthesized handler for a job that includes
+// the source's KeyEvent funtions and methods on the OperatorHandler implemented
+// by the user.
+type ServerHandler interface {
 	// When an event enters the job through the source, this method extracts or
 	// generates a key and timestamp for the event. Workers use the key to
 	// distribute events between themselves in the cluster. They use the timestamp
@@ -22,15 +24,13 @@ type Handler interface {
 	// Called when a new event arrives. The subject is a set of APIs scoped to
 	// the specific partition key being used. Because of this scoping, think of this
 	// as the subject (e.g. a User, a Product) in your domain.
-	OnEvent(ctx context.Context, subject *Subject, rawEvent []byte) error
+	OnEvent(ctx context.Context, subject *internal.Subject, rawEvent []byte) error
 
 	// A previously set timer expires. This is an asynchronous action where the
 	// timer fires at the specified time AT THE EARLIEST. That means that events
 	// after the timer's timestamp have likely already arrived.
-	OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error
+	OnTimerExpired(ctx context.Context, subject *internal.Subject, timer time.Time) error
 }
-
-type KeyedEvent = types.KeyedEvent
 
 type UnimplementedHandler struct{}
 
@@ -38,12 +38,12 @@ func (u UnimplementedHandler) KeyEvent(ctx context.Context, rawEvent []byte) (ma
 	panic("unimplemented")
 }
 
-func (u UnimplementedHandler) OnEvent(ctx context.Context, subject *Subject, rawEvent []byte) error {
+func (u UnimplementedHandler) OnEvent(ctx context.Context, subject *internal.Subject, rawEvent []byte) error {
 	panic("unimplemented")
 }
 
-func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error {
+func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *internal.Subject, timer time.Time) error {
 	panic("unimplemented")
 }
 
-var _ Handler = UnimplementedHandler{}
+var _ ServerHandler = UnimplementedHandler{}

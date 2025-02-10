@@ -9,18 +9,19 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-handler/handlerpb"
 	"reduction.dev/reduction-handler/testrunpb"
 )
 
 // Receive messages over a unix pipe and invoke the user's handler methods.
 type rpcPipeHandler struct {
-	rxnHandler Handler
+	rxnHandler types.ServerHandler
 	stdin      io.Writer
 	stdout     io.Reader
 }
 
-func newRPCPipeHandler(handler Handler, stdin io.Writer, stdout io.Reader) *rpcPipeHandler {
+func newRPCPipeHandler(handler types.ServerHandler, stdin io.Writer, stdout io.Reader) *rpcPipeHandler {
 	return &rpcPipeHandler{
 		rxnHandler: handler,
 		stdin:      stdin,

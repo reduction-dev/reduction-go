@@ -6,6 +6,7 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/rxnerr"
 	"reduction.dev/reduction-handler/handlerpb"
 	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
@@ -13,7 +14,7 @@ import (
 
 // Receive connect requests and invoke the user's handler methods.
 type rpcConnectHandler struct {
-	rxnHandler Handler
+	rxnHandler types.ServerHandler
 }
 
 func (r *rpcConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {

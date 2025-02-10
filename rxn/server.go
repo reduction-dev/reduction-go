@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
 
 	"connectrpc.com/connect"
@@ -23,7 +24,7 @@ type HTTPServer struct {
 
 type Option func(*HTTPServer)
 
-func Start(h Handler, opts ...Option) error {
+func Start(h types.ServerHandler, opts ...Option) error {
 	server := newServer(h, newServerParams{})
 
 	for _, o := range opts {
@@ -55,7 +56,7 @@ func WithListener(l net.Listener) func(server *HTTPServer) {
 var server *HTTPServer
 
 // Uses a singleton, packaged scoped server
-func DefaultServer(h Handler, opts ...Option) *HTTPServer {
+func DefaultServer(h types.ServerHandler, opts ...Option) *HTTPServer {
 	server = newServer(h, newServerParams{})
 
 	for _, o := range opts {
@@ -65,7 +66,7 @@ func DefaultServer(h Handler, opts ...Option) *HTTPServer {
 }
 
 // Create a new server instance
-func NewServer(h Handler, opts ...Option) *HTTPServer {
+func NewServer(h types.ServerHandler, opts ...Option) *HTTPServer {
 	server := newServer(h, newServerParams{})
 	for _, o := range opts {
 		o(server)
@@ -98,7 +99,7 @@ func (s *HTTPServer) Stop() error {
 }
 
 // Create an http server to receive requests from the worker.
-func newServer(handler Handler, params newServerParams) *HTTPServer {
+func newServer(handler types.ServerHandler, params newServerParams) *HTTPServer {
 	if params.addr == "" {
 		params.addr = ":8080"
 	}
