@@ -1,4 +1,4 @@
-package connectors
+package stdio
 
 import (
 	"context"
@@ -9,21 +9,19 @@ import (
 	"reduction.dev/reduction-go/rxn"
 )
 
-// Sink Buildtime Config
-
-type PrintSink struct {
+type Sink struct {
 	ID string
 }
 
-type PrintSinkEvent []byte
+type Event []byte
 
-func NewPrintSink(job *jobs.Job, id string) *PrintSink {
-	sink := &PrintSink{ID: id}
+func NewSink(job *jobs.Job, id string) *Sink {
+	sink := &Sink{ID: id}
 	job.RegisterSink(sink)
 	return sink
 }
 
-func (s *PrintSink) Synthesize() types.SinkSynthesis {
+func (s *Sink) Synthesize() types.SinkSynthesis {
 	return types.SinkSynthesis{
 		Construct: types.Construct{
 			ID:   s.ID,
@@ -35,7 +33,7 @@ func (s *PrintSink) Synthesize() types.SinkSynthesis {
 	}
 }
 
-func (s *PrintSink) Collect(ctx context.Context, event PrintSinkEvent) {
+func (s *Sink) Collect(ctx context.Context, event Event) {
 	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
 	if !ok {
 		panic("must pass rxn context to sink.Collect")

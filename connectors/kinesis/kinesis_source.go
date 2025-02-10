@@ -1,4 +1,4 @@
-package connectors
+package kinesis
 
 import (
 	"context"
@@ -11,27 +11,27 @@ import (
 	"reduction.dev/reduction-protocol/kinesispb"
 )
 
-type KinesisSource struct {
+type Source struct {
 	id        string
 	streamARN string
 	endpoint  string
-	keyEvent  func(ctx context.Context, record *KinesisRecord) ([]types.KeyedEvent, error)
+	keyEvent  func(ctx context.Context, record *Record) ([]types.KeyedEvent, error)
 	operators []*types.Operator
 }
 
-type KinesisRecord struct {
+type Record struct {
 	Timestamp time.Time
 	Data      []byte
 }
 
-type KinesisSourceParams struct {
+type SourceParams struct {
 	StreamARN string
 	Endpoint  string
-	KeyEvent  func(ctx context.Context, record *KinesisRecord) ([]types.KeyedEvent, error)
+	KeyEvent  func(ctx context.Context, record *Record) ([]types.KeyedEvent, error)
 }
 
-func NewKinesisSource(job *jobs.Job, id string, params *KinesisSourceParams) *KinesisSource {
-	source := &KinesisSource{
+func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+	source := &Source{
 		id:        id,
 		streamARN: params.StreamARN,
 		endpoint:  params.Endpoint,
@@ -41,11 +41,11 @@ func NewKinesisSource(job *jobs.Job, id string, params *KinesisSourceParams) *Ki
 	return source
 }
 
-func (s *KinesisSource) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *KinesisSource) Synthesize() types.SourceSynthesis {
+func (s *Source) Synthesize() types.SourceSynthesis {
 	return types.SourceSynthesis{
 		Construct: types.Construct{
 			ID:   s.id,
@@ -60,7 +60,7 @@ func (s *KinesisSource) Synthesize() types.SourceSynthesis {
 			if err := proto.Unmarshal(record, &pbRecord); err != nil {
 				return nil, internal.NewBadRequestErrorf("failed to unmarshal record: %v", err)
 			}
-			kinesisRecord := &KinesisRecord{
+			kinesisRecord := &Record{
 				Data:      pbRecord.Data,
 				Timestamp: pbRecord.Timestamp.AsTime(),
 			}
@@ -70,4 +70,4 @@ func (s *KinesisSource) Synthesize() types.SourceSynthesis {
 	}
 }
 
-var _ types.Source = (*KinesisSource)(nil)
+var _ types.Source = (*Source)(nil)

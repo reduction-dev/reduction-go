@@ -1,4 +1,4 @@
-package connectors
+package memory
 
 import (
 	"context"
@@ -7,13 +7,13 @@ import (
 	"reduction.dev/reduction-go/jobs"
 )
 
-type MemorySink[T any] struct {
+type Sink[T any] struct {
 	ID      string
 	Records []T
 }
 
-func NewMemorySink[T any](job *jobs.Job, id string) *MemorySink[T] {
-	sink := &MemorySink[T]{
+func NewSink[T any](job *jobs.Job, id string) *Sink[T] {
+	sink := &Sink[T]{
 		ID:      id,
 		Records: make([]T, 0),
 	}
@@ -21,10 +21,10 @@ func NewMemorySink[T any](job *jobs.Job, id string) *MemorySink[T] {
 	return sink
 }
 
-func (s *MemorySink[T]) Synthesize() types.SinkSynthesis {
+func (s *Sink[T]) Synthesize() types.SinkSynthesis {
 	return types.SinkSynthesis{}
 }
 
-func (s *MemorySink[T]) Collect(ctx context.Context, event T) {
+func (s *Sink[T]) Collect(ctx context.Context, event T) {
 	s.Records = append(s.Records, event)
 }

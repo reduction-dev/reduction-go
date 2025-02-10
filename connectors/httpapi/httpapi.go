@@ -1,4 +1,4 @@
-package connectors
+package httpapi
 
 import (
 	"context"
@@ -13,23 +13,24 @@ import (
 
 // Sink Buildtime Config
 
-type HTTPAPISink struct {
+type Sink struct {
 	id   string
 	addr string
 }
-type HTTPAPISinkParams struct {
+
+type SinkParams struct {
 	Addr string
 }
 
-type HTTPSinkEvent struct {
+type SinkEvent struct {
 	// A namespace for writing the record
 	Topic string
 	// Arbitrary data to send to the server
 	Data []byte
 }
 
-func NewHTTPAPISink(job *jobs.Job, id string, params *HTTPAPISinkParams) *HTTPAPISink {
-	sink := &HTTPAPISink{
+func NewSink(job *jobs.Job, id string, params *SinkParams) *Sink {
+	sink := &Sink{
 		id:   id,
 		addr: params.Addr,
 	}
@@ -37,7 +38,7 @@ func NewHTTPAPISink(job *jobs.Job, id string, params *HTTPAPISinkParams) *HTTPAP
 	return sink
 }
 
-func (s *HTTPAPISink) Synthesize() types.SinkSynthesis {
+func (s *Sink) Synthesize() types.SinkSynthesis {
 	return types.SinkSynthesis{
 		Construct: types.Construct{
 			ID:   s.id,
@@ -49,7 +50,7 @@ func (s *HTTPAPISink) Synthesize() types.SinkSynthesis {
 	}
 }
 
-func (s *HTTPAPISink) Collect(ctx context.Context, value *HTTPSinkEvent) {
+func (s *Sink) Collect(ctx context.Context, value *SinkEvent) {
 	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
 	if !ok {
 		panic("must pass rxn context to sink.Collect")
@@ -62,11 +63,11 @@ func (s *HTTPAPISink) Collect(ctx context.Context, value *HTTPSinkEvent) {
 	subject.AddSinkRequest(s.id, payload)
 }
 
-var _ types.SinkRuntime[*HTTPSinkEvent] = (*HTTPAPISink)(nil)
+var _ types.SinkRuntime[*SinkEvent] = (*Sink)(nil)
 
 // Source Buildtime Config
 
-type HTTPAPISource struct {
+type Source struct {
 	id        string
 	addr      string
 	topics    []string
@@ -74,14 +75,14 @@ type HTTPAPISource struct {
 	operators []*types.Operator
 }
 
-type HTTPAPISourceParams struct {
+type SourceParams struct {
 	Addr     string
 	Topics   []string
 	KeyEvent func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-func NewHTTPAPISource(job *jobs.Job, id string, params *HTTPAPISourceParams) *HTTPAPISource {
-	source := &HTTPAPISource{
+func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+	source := &Source{
 		id:       id,
 		addr:     params.Addr,
 		topics:   params.Topics,
@@ -91,11 +92,11 @@ func NewHTTPAPISource(job *jobs.Job, id string, params *HTTPAPISourceParams) *HT
 	return source
 }
 
-func (s *HTTPAPISource) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *HTTPAPISource) Synthesize() types.SourceSynthesis {
+func (s *Source) Synthesize() types.SourceSynthesis {
 	return types.SourceSynthesis{
 		Construct: types.Construct{
 			ID:   s.id,

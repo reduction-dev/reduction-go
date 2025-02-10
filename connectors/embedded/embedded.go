@@ -1,4 +1,4 @@
-package connectors
+package embedded
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"reduction.dev/reduction-go/jobs"
 )
 
-type EmbeddedSource struct {
+type Source struct {
 	id         string
 	splitCount int
 	batchSize  int
@@ -16,15 +16,15 @@ type EmbeddedSource struct {
 	operators  []*types.Operator
 }
 
-type EmbeddedSourceParams struct {
+type SourceParams struct {
 	SplitCount int
 	BatchSize  int
 	Generator  string
 	KeyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-func NewEmbeddedSource(job *jobs.Job, id string, params *EmbeddedSourceParams) *EmbeddedSource {
-	source := &EmbeddedSource{
+func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+	source := &Source{
 		id:         id,
 		splitCount: params.SplitCount,
 		batchSize:  params.BatchSize,
@@ -35,11 +35,11 @@ func NewEmbeddedSource(job *jobs.Job, id string, params *EmbeddedSourceParams) *
 	return source
 }
 
-func (s *EmbeddedSource) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *types.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *EmbeddedSource) Synthesize() types.SourceSynthesis {
+func (s *Source) Synthesize() types.SourceSynthesis {
 	return types.SourceSynthesis{
 		Construct: types.Construct{
 			ID:   s.id,
@@ -55,4 +55,4 @@ func (s *EmbeddedSource) Synthesize() types.SourceSynthesis {
 	}
 }
 
-var _ types.Source = (*EmbeddedSource)(nil)
+var _ types.Source = (*Source)(nil)
