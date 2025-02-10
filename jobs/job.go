@@ -16,7 +16,6 @@ type Job struct {
 
 	sources []Source
 	sinks   []types.SinkSynthesizer
-	doc     document
 }
 
 func (j *Job) RegisterSource(source Source) {
@@ -27,16 +26,7 @@ func (j *Job) RegisterSink(sink types.SinkSynthesizer) {
 	j.sinks = append(j.sinks, sink)
 }
 
-func (j *Job) Marshal() []byte {
-	// Call Synthesize to ensure the document is up to date
-	_, err := j.Synthesize()
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal job: %v", err))
-	}
-	return j.doc.Marshal()
-}
-
-func (j *Job) Synthesize() (*types.SynthesizedHandler, error) {
+func (j *Job) Synthesize() (*types.JobSynthesis, error) {
 	if len(j.sources) == 0 {
 		return nil, fmt.Errorf("job is missing source")
 	}
@@ -61,16 +51,20 @@ func (j *Job) Synthesize() (*types.SynthesizedHandler, error) {
 		sinkIDs[i] = synth.Construct.ID
 	}
 
-	// Update doc with current state
-	j.doc.Sources = sourceConstructs
-	j.doc.Sinks = sinkConstructs
-	j.doc.Job.Params = map[string]any{
-		"WorkerCount":              j.WorkerCount,
-		"KeyGroupCount":            j.KeyGroupCount,
-		"WorkingStorageLocation":   j.WorkingStorageLocation,
-		"SavepointStorageLocation": j.SavepointStorageLocation,
-		"SourceIDs":                sourceIDs,
-		"SinkIDs":                  sinkIDs,
+	// Create doc of constructs
+	doc := &document{
+		Sources: sourceConstructs,
+		Sinks:   sinkConstructs,
+		Job: types.Construct{
+			Params: map[string]any{
+				"WorkerCount":              j.WorkerCount,
+				"KeyGroupCount":            j.KeyGroupCount,
+				"WorkingStorageLocation":   j.WorkingStorageLocation,
+				"SavepointStorageLocation": j.SavepointStorageLocation,
+				"SourceIDs":                sourceIDs,
+				"SinkIDs":                  sinkIDs,
+			},
+		},
 	}
 
 	sourceSynth := j.sources[0].Synthesize()
@@ -82,9 +76,12 @@ func (j *Job) Synthesize() (*types.SynthesizedHandler, error) {
 		return nil, fmt.Errorf("Reduction currently supports only one operator per source but has %d configured", len(sourceSynth.Operators))
 	}
 
-	return &types.SynthesizedHandler{
-		KeyEventFunc:    sourceSynth.KeyEventFunc,
-		OperatorHandler: sourceSynth.Operators[0].Synthesize().Handler,
+	return &types.JobSynthesis{
+		Handler: &types.SynthesizedHandler{
+			KeyEventFunc:    sourceSynth.KeyEventFunc,
+			OperatorHandler: sourceSynth.Operators[0].Synthesize().Handler,
+		},
+		Config: doc,
 	}, nil
 }
 
@@ -96,12 +93,11 @@ type document struct {
 }
 
 func (d *document) Marshal() []byte {
-	bytes, err := json.MarshalIndent(d, "", "  ")
+	data, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("BUG: could not marhsal synthesized job: %v", err))
 	}
-
-	return bytes
+	return data
 }
 
 type Source = types.Source

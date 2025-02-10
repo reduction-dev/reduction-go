@@ -61,7 +61,8 @@ type OperatorSynthesis struct {
 }
 
 type JobSynthesis struct {
-	Handler SynthesizedHandler
+	Handler *SynthesizedHandler
+	Config  interface{ Marshal() []byte }
 }
 
 type SynthesizedHandler struct {

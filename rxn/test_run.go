@@ -30,13 +30,13 @@ func NewTestRun(job *jobs.Job) *TestRunNext {
 		commands: make([][]byte, 0),
 		job:      job,
 	}
-	handler, err := job.Synthesize()
+	synthesis, err := job.Synthesize()
 	if err != nil {
 		tr.err = fmt.Errorf("failed to synthesize job: %w", err)
 		return tr
 	}
 
-	tr.handler = handler
+	tr.handler = synthesis.Handler
 	return tr
 }
 
@@ -148,12 +148,12 @@ func (t *TestRunNext) Run() error {
 	}
 
 	// Process messages using pipe handler
-	handler, err := t.job.Synthesize()
+	synthesis, err := t.job.Synthesize()
 	if err != nil {
 		return fmt.Errorf("failed to synthesize job: %w", err)
 	}
 
-	pipeHandler := newRPCPipeHandler(handler, stdin, stdout)
+	pipeHandler := newRPCPipeHandler(synthesis.Handler, stdin, stdout)
 	if err := pipeHandler.ProcessMessages(context.Background()); err != nil {
 		return err
 	}

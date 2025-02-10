@@ -19,9 +19,9 @@ func Run(config *jobs.Job) {
 
 	switch os.Args[1] {
 	case "start":
-		Start(synth, WithAddress(":8080"))
+		Start(synth.Handler, WithAddress(":8080"))
 	case "config":
-		log.Printf("%s", config.Marshal())
+		log.Printf("%s", synth.Config.Marshal())
 	default:
 		log.Fatalf("Unknown command: %s", os.Args[1])
 	}
