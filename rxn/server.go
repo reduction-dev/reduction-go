@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-handler/handlerpb/handlerpbconnect"
+	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 
 	"connectrpc.com/connect"
 )

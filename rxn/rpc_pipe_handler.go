@@ -10,8 +10,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-handler/handlerpb"
-	"reduction.dev/reduction-handler/testrunpb"
+	"reduction.dev/reduction-protocol/handlerpb"
+	"reduction.dev/reduction-protocol/testrunpb"
 )
 
 // Receive messages over a unix pipe and invoke the user's handler methods.

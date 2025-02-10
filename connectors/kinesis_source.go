@@ -8,7 +8,7 @@ import (
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-go/rxnerr"
-	"reduction.dev/reduction-handler/kinesispb"
+	"reduction.dev/reduction-protocol/kinesispb"
 )
 
 type KinesisSource struct {

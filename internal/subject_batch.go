@@ -3,7 +3,7 @@ package internal
 import (
 	"time"
 
-	"reduction.dev/reduction-handler/handlerpb"
+	"reduction.dev/reduction-protocol/handlerpb"
 )
 
 type lazySubjectBatch struct {
