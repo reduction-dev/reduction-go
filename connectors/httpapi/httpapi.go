@@ -22,7 +22,7 @@ type SinkParams struct {
 	Addr string
 }
 
-type SinkEvent struct {
+type SinkRecord struct {
 	// A namespace for writing the record
 	Topic string
 	// Arbitrary data to send to the server
@@ -50,7 +50,7 @@ func (s *Sink) Synthesize() types.SinkSynthesis {
 	}
 }
 
-func (s *Sink) Collect(ctx context.Context, value *SinkEvent) {
+func (s *Sink) Collect(ctx context.Context, value *SinkRecord) {
 	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
 	if !ok {
 		panic("must pass rxn context to sink.Collect")
@@ -63,7 +63,7 @@ func (s *Sink) Collect(ctx context.Context, value *SinkEvent) {
 	subject.AddSinkRequest(s.id, payload)
 }
 
-var _ types.SinkRuntime[*SinkEvent] = (*Sink)(nil)
+var _ types.SinkRuntime[*SinkRecord] = (*Sink)(nil)
 
 // Source Buildtime Config
 
