@@ -2,6 +2,7 @@ package rxn
 
 import (
 	"context"
+	"fmt"
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
@@ -28,3 +29,24 @@ type OperatorHandler = types.OperatorHandler
 type KeyedEvent = types.KeyedEvent
 
 var CurrentWatermark = internal.CurrentWatermark
+
+type QueryType = types.QueryType
+
+type StateSpec[T any] struct {
+	ID        string
+	Query     QueryType
+	Load      func([]StateEntry) (*T, error)
+	Mutations func(*T) ([]StateMutation, error)
+}
+
+func (s StateSpec[T]) StateFor(subject *Subject) *T {
+	state, err := s.Load(subject.StateEntries(s.ID))
+	if err != nil {
+		panic(fmt.Sprintf("failed to load state for %s: %v", s.ID, err))
+	}
+	var mutations internal.LazyMutations = func() ([]StateMutation, error) {
+		return s.Mutations(state)
+	}
+	subject.RegisterStateUse(s.ID, mutations)
+	return state
+}

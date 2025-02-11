@@ -1,4 +1,4 @@
-package rxn
+package rpc
 
 import (
 	"context"
@@ -12,11 +12,15 @@ import (
 )
 
 // Receive connect requests and invoke the user's handler methods.
-type rpcConnectHandler struct {
+type ConnectHandler struct {
 	rxnHandler types.ServerHandler
 }
 
-func (r *rpcConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
+func NewConnectHandler(handler types.ServerHandler) *ConnectHandler {
+	return &ConnectHandler{handler}
+}
+
+func (r *ConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
 	results := make([]*handlerpb.KeyEventResult, 0, len(req.Msg.Values))
 	for _, value := range req.Msg.Values {
 		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
@@ -39,7 +43,7 @@ func (r *rpcConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Requ
 	}), nil
 }
 
-func (r *rpcConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
+func (r *ConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
 	// Track subjects by key
 	subjectBatch := internal.NewLazySubjectBatch(req.Msg.KeyStates)
 	watermark := req.Msg.Watermark.AsTime()
@@ -74,4 +78,4 @@ func handleError(err error) error {
 	return err
 }
 
-var _ handlerpbconnect.HandlerHandler = (*rpcConnectHandler)(nil)
+var _ handlerpbconnect.HandlerHandler = (*ConnectHandler)(nil)

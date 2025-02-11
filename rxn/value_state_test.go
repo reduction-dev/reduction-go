@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"reduction.dev/reduction-go/internal"
 )
 
 func TestValueState(t *testing.T) {
@@ -33,7 +34,7 @@ func TestValueState(t *testing.T) {
 }
 
 func TestValueState_Name(t *testing.T) {
-	v := NewValueState[int]("test-name")
+	v := NewValueState("test-name", ScalarCodec[int]{})
 	assert.Equal(t, "test-name", v.Name(), "name should match the value provided to NewValueState")
 }
 
@@ -42,11 +43,11 @@ func TestValueState_Name(t *testing.T) {
 // 2. Set a value and get mutations
 // 3. Initialize a new instance with those mutations
 // 4. Verify the value matches
-func testValueStateRoundTrip[T ProtoScalar](t *testing.T, name string, testValue T) {
+func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, testValue T) {
 	t.Helper()
 
 	// Initialize first value with empty state
-	v1 := NewValueState[T](name)
+	v1 := NewValueState(name, ScalarCodec[T]{})
 	err := v1.Load([]StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
@@ -59,7 +60,7 @@ func testValueStateRoundTrip[T ProtoScalar](t *testing.T, name string, testValue
 	putMutation := mutations[0].(*PutMutation)
 
 	// Initialize second value with mutation data
-	v2 := NewValueState[T](name)
+	v2 := NewValueState(name, ScalarCodec[T]{})
 	err = v2.Load([]StateEntry{{Value: putMutation.Value}})
 	assert.NoError(t, err, "loading mutation value should not error")
 

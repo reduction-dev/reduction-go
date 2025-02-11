@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"reduction.dev/reduction-go/internal/rpc"
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 
@@ -107,9 +108,10 @@ func newServer(handler types.ServerHandler, params newServerParams) *HTTPServer 
 	mux := http.NewServeMux()
 
 	// Add connect service to mux
-	path, connectHandler := handlerpbconnect.NewHandlerHandler(&rpcConnectHandler{
-		rxnHandler: handler,
-	}, connect.WithInterceptors(NewLoggingInterceptor("handler")))
+	path, connectHandler := handlerpbconnect.NewHandlerHandler(
+		rpc.NewConnectHandler(handler),
+		connect.WithInterceptors(NewLoggingInterceptor("handler")),
+	)
 	mux.Handle(path, connectHandler)
 
 	// Add health check to mux

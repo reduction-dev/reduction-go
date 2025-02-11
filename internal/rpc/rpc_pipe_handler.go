@@ -1,4 +1,4 @@
-package rxn
+package rpc
 
 import (
 	"context"
@@ -15,14 +15,14 @@ import (
 )
 
 // Receive messages over a unix pipe and invoke the user's handler methods.
-type rpcPipeHandler struct {
+type PipeHandler struct {
 	rxnHandler types.ServerHandler
 	stdin      io.Writer
 	stdout     io.Reader
 }
 
-func newRPCPipeHandler(handler types.ServerHandler, stdin io.Writer, stdout io.Reader) *rpcPipeHandler {
-	return &rpcPipeHandler{
+func NewPipeHandler(handler types.ServerHandler, stdin io.Writer, stdout io.Reader) *PipeHandler {
+	return &PipeHandler{
 		rxnHandler: handler,
 		stdin:      stdin,
 		stdout:     stdout,
@@ -30,7 +30,7 @@ func newRPCPipeHandler(handler types.ServerHandler, stdin io.Writer, stdout io.R
 }
 
 // Read messages each containing a method and request parameter.
-func (r *rpcPipeHandler) readMessage() ([]byte, error) {
+func (r *PipeHandler) readMessage() ([]byte, error) {
 	// Read message length
 	var length uint32
 	if err := binary.Read(r.stdout, binary.BigEndian, &length); err != nil {
@@ -50,7 +50,7 @@ func (r *rpcPipeHandler) readMessage() ([]byte, error) {
 }
 
 // Write responses with only the proto response type.
-func (r *rpcPipeHandler) writeResponse(msg proto.Message) error {
+func (r *PipeHandler) writeResponse(msg proto.Message) error {
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal response: %w", err)
@@ -68,7 +68,7 @@ func (r *rpcPipeHandler) writeResponse(msg proto.Message) error {
 }
 
 // ProcessMessages handles all messages until reaching EOF.
-func (r *rpcPipeHandler) ProcessMessages(ctx context.Context) error {
+func (r *PipeHandler) ProcessMessages(ctx context.Context) error {
 	for {
 		data, err := r.readMessage()
 		if err != nil {
@@ -98,7 +98,7 @@ func (r *rpcPipeHandler) ProcessMessages(ctx context.Context) error {
 	}
 }
 
-func (r *rpcPipeHandler) handleKeyEventBatch(ctx context.Context, req *handlerpb.KeyEventBatchRequest) error {
+func (r *PipeHandler) handleKeyEventBatch(ctx context.Context, req *handlerpb.KeyEventBatchRequest) error {
 	results := make([]*handlerpb.KeyEventResult, len(req.Values))
 	for valueIdx, value := range req.Values {
 		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
@@ -120,7 +120,7 @@ func (r *rpcPipeHandler) handleKeyEventBatch(ctx context.Context, req *handlerpb
 	return r.writeResponse(resp)
 }
 
-func (r *rpcPipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerpb.ProcessEventBatchRequest) error {
+func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerpb.ProcessEventBatchRequest) error {
 	subjectBatch := internal.NewLazySubjectBatch(req.KeyStates)
 	watermark := req.Watermark.AsTime()
 

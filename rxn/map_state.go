@@ -48,7 +48,7 @@ func NewMapState[K comparable, V any](name string, opts ...MapStateOption[K, V])
 	}
 	if ms.codec == nil {
 		// Use the default codec. Note: this works when K and V satisfy internal.ProtoScalar.
-		ms.codec = DefaultMapStateCodec[K, V]{}
+		ms.codec = ScalarMapStateCodec[K, V]{}
 	}
 	return ms
 }
@@ -158,25 +158,25 @@ func (s *MapState[K, V]) Name() string {
 
 var _ StateItem = (*MapState[any, any])(nil)
 
-// DefaultMapStateCodec implements MapStateCodec for ProtoScalar types.
-type DefaultMapStateCodec[K comparable, V any] struct{}
+// ScalarMapStateCodec implements MapStateCodec for ProtoScalar types.
+type ScalarMapStateCodec[K comparable, V any] struct{}
 
 // EncodeKey encodes the key using encodeScalar.
-func (DefaultMapStateCodec[K, V]) EncodeKey(key K) ([]byte, error) {
+func (ScalarMapStateCodec[K, V]) EncodeKey(key K) ([]byte, error) {
 	return internal.EncodeScalar(any(key))
 }
 
 // DecodeKey decodes the key using decodeScalar.
-func (DefaultMapStateCodec[K, V]) DecodeKey(b []byte) (K, error) {
+func (ScalarMapStateCodec[K, V]) DecodeKey(b []byte) (K, error) {
 	return internal.DecodeScalar[K](b)
 }
 
 // EncodeValue encodes the value using encodeScalar.
-func (DefaultMapStateCodec[K, V]) EncodeValue(value V) ([]byte, error) {
+func (ScalarMapStateCodec[K, V]) EncodeValue(value V) ([]byte, error) {
 	return internal.EncodeScalar(value)
 }
 
 // DecodeValue decodes the value using decodeScalar.
-func (DefaultMapStateCodec[K, V]) DecodeValue(b []byte) (V, error) {
+func (ScalarMapStateCodec[K, V]) DecodeValue(b []byte) (V, error) {
 	return internal.DecodeScalar[V](b)
 }

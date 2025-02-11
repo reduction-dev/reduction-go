@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"slices"
 	"sort"
 	"time"
@@ -24,6 +25,8 @@ type Subject struct {
 	timestamp time.Time
 	// Requests to send to sinks
 	sinkRequests []*handlerpb.SinkRequest
+	// Track which states were used during handler execution
+	usedStates map[string]LazyMutations
 }
 
 type contextKey string
@@ -52,8 +55,47 @@ func (s *Subject) Timestamp() time.Time {
 }
 
 func (s *Subject) LoadState(stateItem StateItem) error {
+	// Get base state entries
 	stateEntries := s.state[stateItem.Name()]
+
+	// If we have previous mutations for this state, apply them to our entries
+	if mutations, ok := s.usedStates[stateItem.Name()]; ok {
+		prevMutations, err := mutations()
+		if err != nil {
+			return err
+		}
+
+		// Create a map of existing entries
+		entryMap := make(map[string]StateEntry)
+		for _, entry := range stateEntries {
+			entryMap[string(entry.Key)] = entry
+		}
+
+		// Apply previous mutations
+		for _, mutation := range prevMutations {
+			switch typed := mutation.(type) {
+			case *PutMutation:
+				entryMap[string(typed.Key)] = StateEntry{
+					Key:   typed.Key,
+					Value: typed.Value,
+				}
+			case *DeleteMutation:
+				delete(entryMap, string(typed.Key))
+			}
+		}
+
+		// Convert back to slice
+		stateEntries = make([]StateEntry, 0, len(entryMap))
+		for _, entry := range entryMap {
+			stateEntries = append(stateEntries, entry)
+		}
+	}
+
 	return stateItem.Load(stateEntries)
+}
+
+func (s *Subject) StateEntries(stateID string) []StateEntry {
+	return s.state[stateID]
 }
 
 func (s *Subject) UpdateState(state StateItem) error {
@@ -110,9 +152,21 @@ func (s *Subject) encode() *handlerpb.KeyResult {
 		ret.NewTimers[i] = timestamppb.New(t)
 	}
 
-	ret.StateMutationNamespaces = make([]*handlerpb.StateMutationNamespace, len(s.stateMutations))
+	// Collect mutations from all used states
+	allMutations := make(map[string][]StateMutation)
+	for stateID, mutations := range s.usedStates {
+		mutations, err := mutations()
+		if err != nil {
+			// Since encode is called internally and errors here would indicate a serious problem,
+			// we'll maintain the existing pattern of panicking on state errors
+			panic(fmt.Sprintf("failed to get mutations for state %s: %v", stateID, err))
+		}
+		allMutations[stateID] = mutations
+	}
+
+	ret.StateMutationNamespaces = make([]*handlerpb.StateMutationNamespace, len(allMutations))
 	var idx int
-	for ns, mutations := range s.stateMutations {
+	for ns, mutations := range allMutations {
 		// Coalesce mutations by key
 		latest := make(map[string]StateMutation)
 		for _, m := range mutations {
@@ -168,6 +222,13 @@ func (s *Subject) encode() *handlerpb.KeyResult {
 	}
 
 	return ret
+}
+
+type LazyMutations = func() ([]StateMutation, error)
+
+// Register a state item that was used during handler execution
+func (s *Subject) RegisterStateUse(stateID string, mutations LazyMutations) {
+	s.usedStates[stateID] = mutations
 }
 
 // Interface used to brand a mutation type

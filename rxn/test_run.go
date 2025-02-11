@@ -12,6 +12,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"reduction.dev/reduction-go/internal/rpc"
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-protocol/handlerpb"
@@ -153,7 +154,7 @@ func (t *TestRunNext) Run() error {
 		return fmt.Errorf("failed to synthesize job: %w", err)
 	}
 
-	pipeHandler := newRPCPipeHandler(synthesis.Handler, stdin, stdout)
+	pipeHandler := rpc.NewPipeHandler(synthesis.Handler, stdin, stdout)
 	if err := pipeHandler.ProcessMessages(context.Background()); err != nil {
 		return err
 	}

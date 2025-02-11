@@ -6,11 +6,10 @@ import (
 	"reduction.dev/reduction-go/internal"
 )
 
-type ProtoScalar = internal.ProtoScalar
-
-type ValueState[T ProtoScalar] struct {
+type ValueState[T any] struct {
 	name  string
 	Value T
+	codec ValueStateCodec[T]
 }
 
 func (s *ValueState[T]) Load(entries []StateEntry) error {
@@ -24,7 +23,7 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 		return nil
 	}
 
-	value, err := internal.DecodeScalar[T](entry.Value)
+	value, err := s.codec.DecodeValue(entry.Value)
 	if err != nil {
 		return fmt.Errorf("failed to decode value: %w", err)
 	}
@@ -33,7 +32,7 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 }
 
 func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
-	data, err := internal.EncodeScalar(s.Value)
+	data, err := s.codec.EncodeValue(s.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode value: %w", err)
 	}
@@ -49,8 +48,23 @@ func (s *ValueState[T]) Name() string {
 }
 
 // NewValueState creates a new ValueState for either ProtoScalar or BinaryValue types
-func NewValueState[T ProtoScalar](name string) *ValueState[T] {
-	return &ValueState[T]{name: name}
+func NewValueState[T any](name string, codec ValueStateCodec[T]) *ValueState[T] {
+	return &ValueState[T]{
+		name:  name,
+		codec: codec,
+	}
 }
 
 var _ StateItem = (*ValueState[int])(nil)
+
+type ProtoScalar = internal.ProtoScalar
+
+type ScalarCodec[T ProtoScalar] struct{}
+
+func (ScalarCodec[T]) EncodeValue(value T) ([]byte, error) {
+	return internal.EncodeScalar(value)
+}
+
+func (ScalarCodec[T]) DecodeValue(b []byte) (T, error) {
+	return internal.DecodeScalar[T](b)
+}

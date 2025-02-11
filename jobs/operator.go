@@ -6,15 +6,14 @@ type Operator = types.Operator
 
 type OperatorParams struct {
 	Parallelism int
-	Handler     types.OperatorHandler
+	Handler     HandlerFactory
 }
 
+type HandlerFactory = func(op *Operator) types.OperatorHandler
+
 func NewOperator(job *Job, id string, params *OperatorParams) *Operator {
-	operator := &types.Operator{
-		ID:          id,
-		Parallelism: params.Parallelism,
-		Handler:     params.Handler,
-	}
+	operator := types.NewOperator(id)
+	operator.Handler = params.Handler(operator)
 
 	return operator
 }

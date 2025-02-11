@@ -9,11 +9,19 @@ type Operator struct {
 	Parallelism int
 	Handler     OperatorHandler
 	Sinks       []SinkSynthesizer
+	stateSpecs  map[string]QueryType
 }
 
-func NewOperator(id string, params *OperatorParams) *Operator {
+type QueryType = string
+
+const QueryTypeGet QueryType = "get"
+const QueryTypeScan QueryType = "scan"
+
+func NewOperator(id string) *Operator {
 	// ID is currently unused.
-	return &Operator{Handler: params.Handler}
+	return &Operator{
+		stateSpecs: make(map[string]QueryType),
+	}
 }
 
 func (o *Operator) Synthesize() OperatorSynthesis {
@@ -24,4 +32,8 @@ func (o *Operator) Synthesize() OperatorSynthesis {
 
 func (op *Operator) Connect(sink SinkSynthesizer) {
 	op.Sinks = append(op.Sinks, sink)
+}
+
+func (op *Operator) RegisterSpec(id string, queryType QueryType) {
+	op.stateSpecs[id] = queryType
 }
