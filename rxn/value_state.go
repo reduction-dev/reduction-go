@@ -8,7 +8,8 @@ import (
 
 type ValueState[T any] struct {
 	name  string
-	Value T
+	value T
+	dirty bool
 	codec ValueStateCodec[T]
 }
 
@@ -27,12 +28,16 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 	if err != nil {
 		return fmt.Errorf("failed to decode value: %w", err)
 	}
-	s.Value = value
+	s.value = value
 	return nil
 }
 
 func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
-	data, err := s.codec.EncodeValue(s.Value)
+	if !s.dirty {
+		return nil, nil
+	}
+
+	data, err := s.codec.EncodeValue(s.value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode value: %w", err)
 	}
@@ -45,6 +50,15 @@ func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
 
 func (s *ValueState[T]) Name() string {
 	return s.name
+}
+
+func (s *ValueState[T]) Value() T {
+	return s.value
+}
+
+func (s *ValueState[T]) Set(value T) {
+	s.dirty = true
+	s.value = value
 }
 
 // NewValueState creates a new ValueState for either ProtoScalar or BinaryValue types

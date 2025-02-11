@@ -1,4 +1,4 @@
-package rxn
+package rxn_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/rxn"
 )
 
 func TestValueState(t *testing.T) {
@@ -34,7 +35,7 @@ func TestValueState(t *testing.T) {
 }
 
 func TestValueState_Name(t *testing.T) {
-	v := NewValueState("test-name", ScalarCodec[int]{})
+	v := rxn.NewValueState("test-name", rxn.ScalarCodec[int]{})
 	assert.Equal(t, "test-name", v.Name(), "name should match the value provided to NewValueState")
 }
 
@@ -47,23 +48,23 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 	t.Helper()
 
 	// Initialize first value with empty state
-	v1 := NewValueState(name, ScalarCodec[T]{})
-	err := v1.Load([]StateEntry{})
+	v1 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
+	err := v1.Load([]rxn.StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
 	// Set value and get mutations
-	v1.Value = testValue
+	v1.Set(testValue)
 	mutations, err := v1.Mutations()
 	assert.NoError(t, err, "getting mutations should not error")
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
-	putMutation := mutations[0].(*PutMutation)
+	putMutation := mutations[0].(*rxn.PutMutation)
 
 	// Initialize second value with mutation data
-	v2 := NewValueState(name, ScalarCodec[T]{})
-	err = v2.Load([]StateEntry{{Value: putMutation.Value}})
+	v2 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
+	err = v2.Load([]rxn.StateEntry{{Value: putMutation.Value}})
 	assert.NoError(t, err, "loading mutation value should not error")
 
 	// Verify values match
-	assert.Equal(t, testValue, v2.Value, "round-trip value should match original")
+	assert.Equal(t, testValue, v2.Value(), "round-trip value should match original")
 }
