@@ -11,6 +11,7 @@ type MapState[K comparable, V any] struct {
 	original map[K]V
 	updates  map[K]ValueUpdate[V]
 	codec    MapStateCodec[K, V]
+	size     int // tracks current number of items
 }
 
 type ValueUpdate[V any] struct {
@@ -42,6 +43,7 @@ func NewMapState[K comparable, V any](name string, opts ...MapStateOption[K, V])
 		name:     name,
 		original: make(map[K]V),
 		updates:  make(map[K]ValueUpdate[V]),
+		size:     0,
 	}
 	for _, opt := range opts {
 		opt(ms)
@@ -54,8 +56,14 @@ func NewMapState[K comparable, V any](name string, opts ...MapStateOption[K, V])
 }
 
 func (s *MapState[K, V]) Set(key K, value V) {
+	_, hadKey := s.Get(key)
+
 	s.updates[key] = ValueUpdate[V]{
 		Value: value,
+	}
+
+	if !hadKey {
+		s.size++
 	}
 }
 
@@ -68,16 +76,15 @@ func (s *MapState[K, V]) Get(key K) (V, bool) {
 }
 
 func (s *MapState[K, V]) Delete(key K) {
-	// Noop if neither map has the key
-	if _, ok := s.original[key]; !ok {
-		if _, ok := s.updates[key]; !ok {
-			return
-		}
+	_, hadKey := s.Get(key)
+	if !hadKey {
+		return
 	}
 
 	s.updates[key] = ValueUpdate[V]{
 		IsDelete: true,
 	}
+	s.size--
 }
 
 func (s *MapState[K, V]) All() iter.Seq2[K, V] {
@@ -149,11 +156,17 @@ func (s *MapState[K, V]) Load(entries []StateEntry) error {
 		result[key] = value
 	}
 	s.original = result
+	s.size = len(result)
 	return nil
 }
 
 func (s *MapState[K, V]) Name() string {
 	return s.name
+}
+
+// Size returns the current number of items in the map state.
+func (s *MapState[K, V]) Size() int {
+	return s.size
 }
 
 var _ StateItem = (*MapState[any, any])(nil)

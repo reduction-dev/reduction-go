@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"reduction.dev/reduction-go/rxn"
 )
 
@@ -78,6 +79,45 @@ func TestMapState_All(t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("want: %+v; got: %+v", want, got)
 	}
+}
+
+func TestMapState_Size(t *testing.T) {
+	state := rxn.NewMapState("test", rxn.WithCodec(codec))
+
+	// Test empty map
+	assert.Equal(t, 0, state.Size(), "empty map should have size 0")
+
+	// Test after adding items
+	state.Set("k1", "v1")
+	state.Set("k2", "v2")
+	assert.Equal(t, 2, state.Size(), "map should have size 2 after adding two items")
+
+	// Test after loading items
+	state = rxn.NewMapState("test", rxn.WithCodec(codec))
+	state.Load([]rxn.StateEntry{
+		{Key: []byte("k1"), Value: []byte("v1")},
+		{Key: []byte("k2"), Value: []byte("v2")},
+	})
+	assert.Equal(t, 2, state.Size(), "map should have size 2 after loading two items")
+
+	// Test after deleting items
+	state.Delete("k1")
+	assert.Equal(t, 1, state.Size(), "map should have size 1 after deleting one item")
+
+	// Test updating existing items
+	state = rxn.NewMapState("test", rxn.WithCodec(codec))
+	state.Set("k1", "v1")
+	state.Set("k1", "v2") // update same key
+	assert.Equal(t, 1, state.Size(), "map should have size 1 after updating same key")
+
+	// Test delete then add same key
+	state = rxn.NewMapState("test", rxn.WithCodec(codec))
+	state.Load([]rxn.StateEntry{
+		{Key: []byte("k1"), Value: []byte("v1")},
+	})
+	state.Delete("k1")
+	state.Set("k1", "v2")
+	assert.Equal(t, 1, state.Size(), "map should have size 1 after delete-then-add of same key")
 }
 
 // A Codec for a map[string]string
