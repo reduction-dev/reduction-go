@@ -39,6 +39,32 @@ func TestValueState_Name(t *testing.T) {
 	assert.Equal(t, "test-name", v.Name(), "name should match the value provided to NewValueState")
 }
 
+func TestValueState_Drop(t *testing.T) {
+	// Initialize value state with a value
+	v := rxn.NewValueState("test-drop", rxn.ScalarCodec[int]{})
+	encoded, err := rxn.ScalarCodec[int]{}.EncodeValue(42)
+	assert.NoError(t, err, "encoding initial value should not error")
+
+	err = v.Load([]rxn.StateEntry{{Value: encoded}})
+	assert.NoError(t, err, "loading initial value should not error")
+	assert.Equal(t, 42, v.Value(), "initial value should be set")
+
+	// Drop the value
+	v.Drop()
+
+	// Verify mutations contain a delete mutation
+	mutations, err := v.Mutations()
+	assert.NoError(t, err, "getting mutations should not error")
+	assert.Len(t, mutations, 1, "should have exactly one mutation")
+
+	deleteMutation, ok := mutations[0].(*rxn.DeleteMutation)
+	assert.True(t, ok, "mutation should be a DeleteMutation")
+	assert.Equal(t, []byte("test-drop"), deleteMutation.Key, "delete mutation key should match state name")
+
+	// Verify value is zeroed
+	assert.Equal(t, 0, v.Value(), "value should be zeroed after drop")
+}
+
 // testValueStateRoundTrip is a helper function that tests the complete round-trip of a ValueState:
 // 1. Initialize with empty state
 // 2. Set a value and get mutations

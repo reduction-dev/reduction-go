@@ -6,11 +6,20 @@ import (
 	"reduction.dev/reduction-go/internal"
 )
 
+// valueStatus represents the sync state of a value.
+type valueStatus int
+
+const (
+	statusInitial valueStatus = iota
+	statusUpdated
+	statusDeleted
+)
+
 type ValueState[T any] struct {
-	name  string
-	value T
-	dirty bool
-	codec ValueStateCodec[T]
+	name   string
+	value  T
+	status valueStatus
+	codec  ValueStateCodec[T]
 }
 
 func (s *ValueState[T]) Load(entries []StateEntry) error {
@@ -33,8 +42,14 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 }
 
 func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
-	if !s.dirty {
+	if s.status == statusInitial {
 		return nil, nil
+	}
+
+	if s.status == statusDeleted {
+		return []StateMutation{&DeleteMutation{
+			Key: []byte(s.Name()),
+		}}, nil
 	}
 
 	data, err := s.codec.EncodeValue(s.value)
@@ -57,8 +72,14 @@ func (s *ValueState[T]) Value() T {
 }
 
 func (s *ValueState[T]) Set(value T) {
-	s.dirty = true
+	s.status = statusUpdated
 	s.value = value
+}
+
+func (s *ValueState[T]) Drop() {
+	s.status = statusDeleted
+	var zero T
+	s.value = zero
 }
 
 // NewValueState creates a new ValueState for either ProtoScalar or BinaryValue types

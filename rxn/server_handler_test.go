@@ -307,6 +307,63 @@ func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 	assertResponseEqual(t, want, got.Msg)
 }
 
+func TestProcessEventBatch_DropValueState(t *testing.T) {
+	now := time.Now().UTC()
+	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+		stateSpec := rxn.NewValueSpec(op, "test-value", rxn.ScalarCodec[int]{})
+		return &rxnHandler{
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+				state := stateSpec.StateFor(subject)
+				state.Drop()
+				return nil
+			},
+		}
+	})
+
+	// Properly encode the initial value
+	initialValue, err := rxn.ScalarCodec[int]{}.EncodeValue(42)
+	require.NoError(t, err, "encoding initial value should not error")
+
+	got, err := client.ProcessEventBatch(context.Background(), connect.NewRequest(&handlerpb.ProcessEventBatchRequest{
+		Events: []*handlerpb.Event{{
+			Event: &handlerpb.Event_KeyedEvent{
+				KeyedEvent: &handlerpb.KeyedEvent{
+					Key:       []byte("test-key"),
+					Timestamp: timestamppb.New(now),
+					Value:     []byte("test-input"),
+				},
+			},
+		}},
+		KeyStates: []*handlerpb.KeyState{{
+			Key: []byte("test-key"),
+			StateEntryNamespaces: []*handlerpb.StateEntryNamespace{{
+				Namespace: "test-value",
+				Entries: []*handlerpb.StateEntry{{
+					Value: initialValue,
+				}},
+			}},
+		}},
+	}))
+	require.NoError(t, err)
+
+	want := &handlerpb.ProcessEventBatchResponse{
+		KeyResults: []*handlerpb.KeyResult{{
+			Key: []byte("test-key"),
+			StateMutationNamespaces: []*handlerpb.StateMutationNamespace{{
+				Namespace: "test-value",
+				Mutations: []*handlerpb.StateMutation{{
+					Mutation: &handlerpb.StateMutation_Delete{
+						Delete: &handlerpb.DeleteMutation{
+							Key: []byte("test-value"),
+						},
+					},
+				}},
+			}},
+		}},
+	}
+	assertResponseEqual(t, want, got.Msg)
+}
+
 type MapStringIntCodec struct{}
 
 func (m MapStringIntCodec) EncodeKey(key string) ([]byte, error) {
