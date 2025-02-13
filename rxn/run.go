@@ -1,6 +1,7 @@
 package rxn
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -21,7 +22,7 @@ func Run(config *jobs.Job) {
 	case "start":
 		Start(synth.Handler, WithAddress(":8080"))
 	case "config":
-		log.Printf("%s", synth.Config.Marshal())
+		fmt.Printf("%s", synth.Config.Marshal())
 	default:
 		log.Fatalf("Unknown command: %s", os.Args[1])
 	}

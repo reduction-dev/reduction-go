@@ -25,7 +25,7 @@ func (s *Sink) Synthesize() types.SinkSynthesis {
 	return types.SinkSynthesis{
 		Construct: types.Construct{
 			ID:   s.ID,
-			Type: "Sink:Print",
+			Type: "Sink:Stdio",
 			Params: map[string]any{
 				"ID": s.ID,
 			},
