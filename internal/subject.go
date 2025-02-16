@@ -27,6 +27,24 @@ type Subject struct {
 	sinkRequests []*handlerpb.SinkRequest
 	// Track which states were used during handler execution
 	usedStates map[string]LazyMutations
+	// Cache of loaded state instances
+	loadedStates map[string]any
+}
+
+// LoadedState returns a previously loaded state instance for the given ID, or nil if not found
+func (s *Subject) LoadedState(id string) any {
+	if s.loadedStates == nil {
+		return nil
+	}
+	return s.loadedStates[id]
+}
+
+// StoreLoadedState stores a loaded state instance for later reuse
+func (s *Subject) StoreLoadedState(id string, state any) {
+	if s.loadedStates == nil {
+		s.loadedStates = make(map[string]any)
+	}
+	s.loadedStates[id] = state
 }
 
 type contextKey string

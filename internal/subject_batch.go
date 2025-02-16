@@ -42,6 +42,7 @@ func (sb *lazySubjectBatch) SubjectFor(key []byte, timestamp time.Time) *Subject
 		state:          sb.stateForKey(key),
 		stateMutations: make(map[string][]StateMutation),
 		usedStates:     make(map[string]LazyMutations),
+		loadedStates:   make(map[string]any),
 	}
 	sb.subjects[string(key)] = subject
 	return subject
