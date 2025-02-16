@@ -33,13 +33,25 @@ var CurrentWatermark = internal.CurrentWatermark
 type QueryType = types.QueryType
 
 type StateSpec[T any] struct {
-	ID        string
-	Query     QueryType
-	Load      func([]StateEntry) (*T, error)
-	Mutations func(*T) ([]StateMutation, error)
+	ID             string
+	Query          QueryType
+	Load           func([]StateEntry) (*T, error)
+	Mutations      func(*T) ([]StateMutation, error)
+	loadedSubjects map[*Subject]*T // Cache state instances per subject
 }
 
-func (s StateSpec[T]) StateFor(subject *Subject) *T {
+func (s *StateSpec[T]) StateFor(subject *Subject) *T {
+	// Initialize cache if needed
+	if s.loadedSubjects == nil {
+		s.loadedSubjects = make(map[*Subject]*T)
+	}
+
+	// Check if we already have a state instance for this subject
+	if state, ok := s.loadedSubjects[subject]; ok {
+		return state
+	}
+
+	// Create new state instance and cache it
 	state, err := s.Load(subject.StateEntries(s.ID))
 	if err != nil {
 		panic(fmt.Sprintf("failed to load state for %s: %v", s.ID, err))
@@ -48,5 +60,6 @@ func (s StateSpec[T]) StateFor(subject *Subject) *T {
 		return s.Mutations(state)
 	}
 	subject.RegisterStateUse(s.ID, mutations)
+	s.loadedSubjects[subject] = state
 	return state
 }

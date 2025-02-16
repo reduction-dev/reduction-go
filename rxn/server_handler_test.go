@@ -1,9 +1,11 @@
 package rxn_test
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -364,6 +366,57 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 	assertResponseEqual(t, want, got.Msg)
 }
 
+func TestProcessEventBatch_IncrementValueState(t *testing.T) {
+	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+		stateSpec := rxn.NewValueSpec(op, "counter-state", rxn.ScalarCodec[int]{})
+		return &rxnHandler{
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+				state := stateSpec.StateFor(subject)
+				state.Set(state.Value() + 1)
+				return nil
+			},
+		}
+	})
+
+	got, err := client.ProcessEventBatch(context.Background(), connect.NewRequest(&handlerpb.ProcessEventBatchRequest{
+		Events: []*handlerpb.Event{{
+			Event: &handlerpb.Event_KeyedEvent{
+				KeyedEvent: &handlerpb.KeyedEvent{
+					Key: []byte("test-key"),
+				},
+			},
+		}, {
+			Event: &handlerpb.Event_KeyedEvent{
+				KeyedEvent: &handlerpb.KeyedEvent{
+					Key: []byte("test-key"),
+				},
+			},
+		}},
+	}))
+	require.NoError(t, err)
+
+	encodedValue, err := rxn.ScalarCodec[int]{}.EncodeValue(2)
+	require.NoError(t, err)
+
+	want := &handlerpb.ProcessEventBatchResponse{
+		KeyResults: []*handlerpb.KeyResult{{
+			Key: []byte("test-key"),
+			StateMutationNamespaces: []*handlerpb.StateMutationNamespace{{
+				Namespace: "counter-state",
+				Mutations: []*handlerpb.StateMutation{{
+					Mutation: &handlerpb.StateMutation_Put{
+						Put: &handlerpb.PutMutation{
+							Key:   []byte("counter-state"),
+							Value: encodedValue,
+						},
+					},
+				}},
+			}},
+		}},
+	}
+	assertResponseEqual(t, want, got.Msg)
+}
+
 type MapStringIntCodec struct{}
 
 func (m MapStringIntCodec) EncodeKey(key string) ([]byte, error) {
@@ -389,17 +442,17 @@ func assertResponseEqual(t *testing.T, want, got *handlerpb.ProcessEventBatchRes
 	t.Helper()
 
 	// Sink request order should be preserved
-	assert.Equal(t, want.SinkRequests, got.SinkRequests)
+	assert.EqualExportedValues(t, want.SinkRequests, got.SinkRequests)
 
-	// Key results represent a map by key so the order doesn't matter.
-	assert.ElementsMatch(t, want.KeyResults, got.KeyResults)
-
-	// The order of state mutations within each state mutation namespace should be preserved
-	for i, wantNamespace := range want.KeyResults {
-		for j, wantMutation := range wantNamespace.StateMutationNamespaces {
-			assert.Equal(t, wantMutation.Namespace, got.KeyResults[i].StateMutationNamespaces[j].Namespace)
-		}
+	// Key results represent a map by key so the order doesn't matter for assertions. Sort KeyResults by key before comparing
+	sortKeyResults := func(kr []*handlerpb.KeyResult) {
+		slices.SortFunc(kr, func(a, b *handlerpb.KeyResult) int {
+			return bytes.Compare(a.Key, b.Key)
+		})
 	}
+	sortKeyResults(want.KeyResults)
+	sortKeyResults(got.KeyResults)
+	assert.EqualExportedValues(t, want.KeyResults, got.KeyResults)
 }
 
 type rxnHandler struct {

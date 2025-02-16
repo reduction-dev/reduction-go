@@ -65,6 +65,31 @@ func TestValueState_Drop(t *testing.T) {
 	assert.Equal(t, 0, v.Value(), "value should be zeroed after drop")
 }
 
+func TestValueState_IncrementMultipleEvents(t *testing.T) {
+	// Initialize state
+	v := rxn.NewValueState("test-counter", rxn.ScalarCodec[int]{})
+	err := v.Load([]rxn.StateEntry{})
+	assert.NoError(t, err, "loading empty state should not error")
+
+	// First event - increment from 0 to 1
+	v.Set(v.Value() + 1)
+	assert.Equal(t, 1, v.Value(), "value should be 1 after first increment")
+
+	// Second event - increment from 1 to 2
+	v.Set(v.Value() + 1)
+	assert.Equal(t, 2, v.Value(), "value should be 2 after second increment")
+
+	// Verify mutations reflect the final value
+	mutations, err := v.Mutations()
+	assert.NoError(t, err, "getting mutations should not error")
+	assert.Len(t, mutations, 1, "should have exactly one mutation")
+
+	putMutation := mutations[0].(*rxn.PutMutation)
+	decodedValue, err := rxn.ScalarCodec[int]{}.DecodeValue(putMutation.Value)
+	assert.NoError(t, err, "decoding mutation value should not error")
+	assert.Equal(t, 2, decodedValue, "mutation should contain final value of 2")
+}
+
 // testValueStateRoundTrip is a helper function that tests the complete round-trip of a ValueState:
 // 1. Initialize with empty state
 // 2. Set a value and get mutations
