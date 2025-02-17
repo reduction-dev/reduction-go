@@ -25,7 +25,7 @@ type HTTPServer struct {
 
 type Option func(*HTTPServer)
 
-func Start(h types.ServerHandler, opts ...Option) error {
+func Start(h ServerHandler, opts ...Option) error {
 	server := newServer(h, newServerParams{})
 
 	for _, o := range opts {

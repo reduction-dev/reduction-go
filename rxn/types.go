@@ -27,6 +27,7 @@ type DeleteMutation = internal.DeleteMutation
 type StateItem = internal.StateItem
 type OperatorHandler = types.OperatorHandler
 type KeyedEvent = types.KeyedEvent
+type ServerHandler = types.ServerHandler
 
 var CurrentWatermark = internal.CurrentWatermark
 

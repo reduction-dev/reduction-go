@@ -44,7 +44,6 @@ func (r *ConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request
 }
 
 func (r *ConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
-	// Track subjects by key
 	subjectBatch := internal.NewLazySubjectBatch(req.Msg.KeyStates)
 	watermark := req.Msg.Watermark.AsTime()
 
@@ -54,7 +53,11 @@ func (r *ConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Req
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
 			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
-			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
+			if err := r.rxnHandler.OnEvent(ctx, subject, types.KeyedEvent{
+				Key:       typedEvent.KeyedEvent.Key,
+				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
+				Value:     typedEvent.KeyedEvent.Value,
+			}); err != nil {
 				return nil, handleError(err)
 			}
 		case *handlerpb.Event_TimerExpired:

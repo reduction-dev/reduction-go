@@ -130,7 +130,11 @@ func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerp
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
 			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
-			if err := r.rxnHandler.OnEvent(ctx, subject, typedEvent.KeyedEvent.Value); err != nil {
+			if err := r.rxnHandler.OnEvent(ctx, subject, types.KeyedEvent{
+				Key:       typedEvent.KeyedEvent.Key,
+				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
+				Value:     typedEvent.KeyedEvent.Value,
+			}); err != nil {
 				return err
 			}
 		case *handlerpb.Event_TimerExpired:

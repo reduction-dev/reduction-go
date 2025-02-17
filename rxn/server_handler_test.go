@@ -29,7 +29,7 @@ func TestProcessEventBatch_ProcessKeyedEvent(t *testing.T) {
 		sink := stdio.NewSink(job, "test-sink")
 
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				subject.SetTimer(now.Add(time.Hour))
 				sink.Collect(ctx, []byte("test-output"))
 				return nil
@@ -108,7 +108,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
 				state.Set("count", 42)
 				return nil
@@ -163,7 +163,7 @@ func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
 				counter, _ := state.Get("counter")
 				counter++
@@ -262,7 +262,7 @@ func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 		onTimerSink := stdio.NewSink(job, "on-timer-expired-sink")
 
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				onEventSink.Collect(ctx, []byte("keyed-output"))
 				return nil
 			},
@@ -314,7 +314,7 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewValueSpec(op, "test-value", rxn.ScalarCodec[int]{})
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
 				state.Drop()
 				return nil
@@ -370,7 +370,7 @@ func TestProcessEventBatch_IncrementValueState(t *testing.T) {
 	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewValueSpec(op, "counter-state", rxn.ScalarCodec[int]{})
 		return &rxnHandler{
-			onEventFunc: func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
 				state.Set(state.Value() + 1)
 				return nil
@@ -456,14 +456,14 @@ func assertResponseEqual(t *testing.T, want, got *handlerpb.ProcessEventBatchRes
 }
 
 type rxnHandler struct {
-	onEventFunc        func(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error
+	onEventFunc        func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error
 	onTimerExpiredFunc func(ctx context.Context, subject *rxn.Subject, timer time.Time) error
 	keyEventFunc       func(ctx context.Context, rawEvent []byte) ([]rxn.KeyedEvent, error)
 }
 
-func (m *rxnHandler) OnEvent(ctx context.Context, subject *rxn.Subject, rawEvent []byte) error {
+func (m *rxnHandler) OnEvent(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 	if m.onEventFunc != nil {
-		return m.onEventFunc(ctx, subject, rawEvent)
+		return m.onEventFunc(ctx, subject, event)
 	}
 	return nil
 }
