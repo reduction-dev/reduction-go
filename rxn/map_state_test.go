@@ -21,8 +21,8 @@ func TestMapState_PutMutation(t *testing.T) {
 		t.Fatalf("want 1 mutation, got %d", len(mutations))
 	}
 
-	got := mutations[0].(*rxn.PutMutation)
-	want := &rxn.PutMutation{
+	got := mutations[0].(*internal.PutMutation)
+	want := &internal.PutMutation{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
 	}

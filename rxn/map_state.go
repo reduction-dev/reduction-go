@@ -136,7 +136,7 @@ func (s *MapState[K, V]) Mutations() ([]StateMutation, error) {
 			if err != nil {
 				return nil, err
 			}
-			mutations = append(mutations, &PutMutation{Key: keyBytes, Value: bs})
+			mutations = append(mutations, &internal.PutMutation{Key: keyBytes, Value: bs})
 		}
 	}
 	return mutations, nil

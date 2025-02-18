@@ -57,7 +57,7 @@ func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
 		return nil, fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	return []StateMutation{&PutMutation{
+	return []StateMutation{&internal.PutMutation{
 		Key:   []byte(s.Name()),
 		Value: data,
 	}}, nil

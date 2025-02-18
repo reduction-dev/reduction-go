@@ -84,7 +84,7 @@ func TestValueState_IncrementMultipleEvents(t *testing.T) {
 	assert.NoError(t, err, "getting mutations should not error")
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
-	putMutation := mutations[0].(*rxn.PutMutation)
+	putMutation := mutations[0].(*internal.PutMutation)
 	decodedValue, err := rxn.ScalarCodec[int]{}.DecodeValue(putMutation.Value)
 	assert.NoError(t, err, "decoding mutation value should not error")
 	assert.Equal(t, 2, decodedValue, "mutation should contain final value of 2")
@@ -109,7 +109,7 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 	assert.NoError(t, err, "getting mutations should not error")
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
-	putMutation := mutations[0].(*rxn.PutMutation)
+	putMutation := mutations[0].(*internal.PutMutation)
 
 	// Initialize second value with mutation data
 	v2 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
