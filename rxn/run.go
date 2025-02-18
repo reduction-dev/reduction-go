@@ -3,9 +3,11 @@ package rxn
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 
 	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/rxnsvr"
 )
 
 // Run accepts either a "start" or "config" command. Config prints the job
@@ -22,7 +24,14 @@ func Run(config *jobs.Job) {
 
 	switch os.Args[1] {
 	case "start":
-		start(synth.Handler, WithAddress(":8080"))
+		listener, err := net.Listen("tcp", ":8080")
+		if err != nil {
+			log.Fatalf("failed to listen: %v", err)
+		}
+		svr := rxnsvr.New(synth.Handler, rxnsvr.WithListener(listener))
+		if err := svr.Start(); err != nil {
+			log.Fatalf("server stopped with error: %v", err)
+		}
 	case "config":
 		fmt.Printf("%s", synth.Config.Marshal())
 	default:
