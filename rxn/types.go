@@ -29,8 +29,6 @@ type OperatorHandler = types.OperatorHandler
 type KeyedEvent = types.KeyedEvent
 type ServerHandler = types.ServerHandler
 
-var CurrentWatermark = internal.CurrentWatermark
-
 type QueryType = types.QueryType
 
 type StateSpec[T any] struct {

@@ -8,6 +8,8 @@ import (
 	"reduction.dev/reduction-go/jobs"
 )
 
+// Run accepts either a "start" or "config" command. Config prints the job
+// config to stdout. Start runs the job on ":8080".
 func Run(config *jobs.Job) {
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: %s <command>", os.Args[0])
@@ -20,7 +22,7 @@ func Run(config *jobs.Job) {
 
 	switch os.Args[1] {
 	case "start":
-		Start(synth.Handler, WithAddress(":8080"))
+		start(synth.Handler, WithAddress(":8080"))
 	case "config":
 		fmt.Printf("%s", synth.Config.Marshal())
 	default:

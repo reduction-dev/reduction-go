@@ -173,17 +173,6 @@ func (t *TestRunNext) Run() error {
 	return nil
 }
 
-func TestRun(job *jobs.Job, events [][]byte) error {
-	t := NewTestRun(job)
-
-	for _, event := range events {
-		t.AddRecord(event)
-	}
-	t.AddWatermark()
-
-	return t.Run()
-}
-
 type commandError struct {
 	err    error
 	stderr []byte

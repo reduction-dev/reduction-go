@@ -25,7 +25,7 @@ type HTTPServer struct {
 
 type Option func(*HTTPServer)
 
-func Start(h ServerHandler, opts ...Option) error {
+func start(h ServerHandler, opts ...Option) error {
 	server := newServer(h, newServerParams{})
 
 	for _, o := range opts {
@@ -33,18 +33,6 @@ func Start(h ServerHandler, opts ...Option) error {
 	}
 
 	return server.Start()
-}
-
-func Close() {
-	if server != nil {
-		server.Stop()
-	}
-}
-
-func WithAddress(addr string) func(server *HTTPServer) {
-	return func(s *HTTPServer) {
-		s.addr = addr
-	}
 }
 
 func WithListener(l net.Listener) func(server *HTTPServer) {
@@ -110,7 +98,7 @@ func newServer(handler types.ServerHandler, params newServerParams) *HTTPServer 
 	// Add connect service to mux
 	path, connectHandler := handlerpbconnect.NewHandlerHandler(
 		rpc.NewConnectHandler(handler),
-		connect.WithInterceptors(NewLoggingInterceptor("handler")),
+		connect.WithInterceptors(newLoggingInterceptor("handler")),
 	)
 	mux.Handle(path, connectHandler)
 
@@ -124,7 +112,7 @@ func newServer(handler types.ServerHandler, params newServerParams) *HTTPServer 
 	return &HTTPServer{addr: params.addr, httpServer: s}
 }
 
-func NewLoggingInterceptor(prefix string) connect.UnaryInterceptorFunc {
+func newLoggingInterceptor(prefix string) connect.UnaryInterceptorFunc {
 	interceptor := func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			slog.Debug("["+prefix+"] request", "url", req.Spec().Procedure, "msg", req.Any())
