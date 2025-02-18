@@ -130,7 +130,7 @@ func (s *MapState[K, V]) Mutations() ([]StateMutation, error) {
 		}
 
 		if update.IsDelete {
-			mutations = append(mutations, &DeleteMutation{Key: keyBytes})
+			mutations = append(mutations, &internal.DeleteMutation{Key: keyBytes})
 		} else {
 			bs, err := s.codec.EncodeValue(update.Value)
 			if err != nil {

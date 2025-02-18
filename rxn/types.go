@@ -23,7 +23,6 @@ type Subject = internal.Subject
 type StateEntry = internal.StateEntry
 type StateMutation = internal.StateMutation
 type PutMutation = internal.PutMutation
-type DeleteMutation = internal.DeleteMutation
 type StateItem = internal.StateItem
 type OperatorHandler = types.OperatorHandler
 type KeyedEvent = types.KeyedEvent

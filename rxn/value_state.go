@@ -47,7 +47,7 @@ func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
 	}
 
 	if s.status == statusDeleted {
-		return []StateMutation{&DeleteMutation{
+		return []StateMutation{&internal.DeleteMutation{
 			Key: []byte(s.Name()),
 		}}, nil
 	}

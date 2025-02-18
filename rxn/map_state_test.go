@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/rxn"
 )
 
@@ -46,8 +47,8 @@ func TestMapState_DeleteMutation(t *testing.T) {
 		t.Fatalf("want 1 mutation, got %d", len(mutations))
 	}
 
-	got := mutations[0].(*rxn.DeleteMutation)
-	want := &rxn.DeleteMutation{
+	got := mutations[0].(*internal.DeleteMutation)
+	want := &internal.DeleteMutation{
 		Key: []byte("k1"),
 	}
 	if !reflect.DeepEqual(want, got) {

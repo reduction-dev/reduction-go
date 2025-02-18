@@ -57,7 +57,7 @@ func TestValueState_Drop(t *testing.T) {
 	assert.NoError(t, err, "getting mutations should not error")
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
-	deleteMutation, ok := mutations[0].(*rxn.DeleteMutation)
+	deleteMutation, ok := mutations[0].(*internal.DeleteMutation)
 	assert.True(t, ok, "mutation should be a DeleteMutation")
 	assert.Equal(t, []byte("test-drop"), deleteMutation.Key, "delete mutation key should match state name")
 
