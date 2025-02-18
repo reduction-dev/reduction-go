@@ -21,7 +21,6 @@ type SinkConfig interface {
 
 type Subject = internal.Subject
 type StateEntry = internal.StateEntry
-type StateMutation = internal.StateMutation
 type StateItem = internal.StateItem
 type OperatorHandler = types.OperatorHandler
 type KeyedEvent = types.KeyedEvent
@@ -33,7 +32,7 @@ type StateSpec[T any] struct {
 	ID        string
 	Query     QueryType
 	Load      func([]StateEntry) (*T, error)
-	Mutations func(*T) ([]StateMutation, error)
+	Mutations func(*T) ([]internal.StateMutation, error)
 }
 
 func (s *StateSpec[T]) StateFor(subject *Subject) *T {
@@ -47,7 +46,7 @@ func (s *StateSpec[T]) StateFor(subject *Subject) *T {
 	if err != nil {
 		panic(fmt.Sprintf("failed to load state for %s: %v", s.ID, err))
 	}
-	var mutations internal.LazyMutations = func() ([]StateMutation, error) {
+	var mutations internal.LazyMutations = func() ([]internal.StateMutation, error) {
 		return s.Mutations(state)
 	}
 	subject.RegisterStateUse(s.ID, mutations)

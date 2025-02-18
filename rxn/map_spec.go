@@ -1,6 +1,7 @@
 package rxn
 
 import (
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
 )
@@ -17,7 +18,7 @@ func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec MapStat
 			ms := NewMapState(id, WithCodec(codec))
 			return ms, ms.Load(stateEntries)
 		},
-		Mutations: func(state *MapState[K, T]) ([]StateMutation, error) {
+		Mutations: func(state *MapState[K, T]) ([]internal.StateMutation, error) {
 			return state.Mutations()
 		},
 	}

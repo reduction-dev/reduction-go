@@ -121,8 +121,8 @@ func (s *MapState[K, V]) All() iter.Seq2[K, V] {
 	}
 }
 
-func (s *MapState[K, V]) Mutations() ([]StateMutation, error) {
-	mutations := make([]StateMutation, 0, len(s.updates))
+func (s *MapState[K, V]) Mutations() ([]internal.StateMutation, error) {
+	mutations := make([]internal.StateMutation, 0, len(s.updates))
 	for key, update := range s.updates {
 		keyBytes, err := s.codec.EncodeKey(key)
 		if err != nil {

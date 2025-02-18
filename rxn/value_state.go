@@ -41,13 +41,13 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 	return nil
 }
 
-func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
+func (s *ValueState[T]) Mutations() ([]internal.StateMutation, error) {
 	if s.status == statusInitial {
 		return nil, nil
 	}
 
 	if s.status == statusDeleted {
-		return []StateMutation{&internal.DeleteMutation{
+		return []internal.StateMutation{&internal.DeleteMutation{
 			Key: []byte(s.Name()),
 		}}, nil
 	}
@@ -57,7 +57,7 @@ func (s *ValueState[T]) Mutations() ([]StateMutation, error) {
 		return nil, fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	return []StateMutation{&internal.PutMutation{
+	return []internal.StateMutation{&internal.PutMutation{
 		Key:   []byte(s.Name()),
 		Value: data,
 	}}, nil
