@@ -26,33 +26,15 @@ type MapStateCodec[K comparable, V any] interface {
 	DecodeValue(b []byte) (V, error)
 }
 
-// MapStateOption is a function that applies a configuration to a MapState.
-type MapStateOption[K comparable, V any] func(*MapState[K, V])
-
-// WithCodec sets the codec for a MapState.
-func WithCodec[K comparable, V any](codec MapStateCodec[K, V]) MapStateOption[K, V] {
-	return func(s *MapState[K, V]) {
-		s.codec = codec
-	}
-}
-
 // NewMapState creates a new MapState, applying any provided options.
-// If no codec option is provided, it defaults to using DefaultMapStateCodec.
-func NewMapState[K comparable, V any](name string, opts ...MapStateOption[K, V]) *MapState[K, V] {
-	ms := &MapState[K, V]{
+func NewMapState[K comparable, V any](name string, codec MapStateCodec[K, V]) *MapState[K, V] {
+	return &MapState[K, V]{
 		name:     name,
 		original: make(map[K]V),
 		updates:  make(map[K]ValueUpdate[V]),
 		size:     0,
+		codec:    codec,
 	}
-	for _, opt := range opts {
-		opt(ms)
-	}
-	if ms.codec == nil {
-		// Use the default codec. Note: this works when K and V satisfy internal.ProtoScalar.
-		ms.codec = ScalarMapStateCodec[K, V]{}
-	}
-	return ms
 }
 
 func (s *MapState[K, V]) Set(key K, value V) {

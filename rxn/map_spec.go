@@ -20,7 +20,7 @@ func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec states.
 		ID:    id,
 		Query: types.QueryTypeScan,
 		Load: func(stateEntries []StateEntry) (*MapState[K, T], error) {
-			ms := states.NewMapState(id, states.WithCodec(codec))
+			ms := states.NewMapState(id, codec)
 			return ms, ms.Load(stateEntries)
 		},
 		Mutations: func(state *MapState[K, T]) ([]internal.StateMutation, error) {

@@ -10,7 +10,7 @@ import (
 )
 
 func TestMapState_PutMutation(t *testing.T) {
-	state := states.NewMapState("id", states.WithCodec(codec))
+	state := states.NewMapState("id", codec)
 	state.Set("k1", "v1")
 
 	mutations, err := state.Mutations()
@@ -32,7 +32,7 @@ func TestMapState_PutMutation(t *testing.T) {
 }
 
 func TestMapState_DeleteMutation(t *testing.T) {
-	state := states.NewMapState("id", states.WithCodec(codec))
+	state := states.NewMapState("id", codec)
 	state.Load([]internal.StateEntry{{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
@@ -57,7 +57,7 @@ func TestMapState_DeleteMutation(t *testing.T) {
 }
 
 func TestMapState_All(t *testing.T) {
-	state := states.NewMapState("id", states.WithCodec(codec))
+	state := states.NewMapState("id", codec)
 	state.Load([]internal.StateEntry{{
 		Key: []byte("unchanged"), Value: []byte("unchanged"),
 	}, {
@@ -83,7 +83,7 @@ func TestMapState_All(t *testing.T) {
 }
 
 func TestMapState_Size(t *testing.T) {
-	state := states.NewMapState("test", states.WithCodec(codec))
+	state := states.NewMapState("test", codec)
 
 	// Test empty map
 	assert.Equal(t, 0, state.Size(), "empty map should have size 0")
@@ -94,7 +94,7 @@ func TestMapState_Size(t *testing.T) {
 	assert.Equal(t, 2, state.Size(), "map should have size 2 after adding two items")
 
 	// Test after loading items
-	state = states.NewMapState("test", states.WithCodec(codec))
+	state = states.NewMapState("test", codec)
 	state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 		{Key: []byte("k2"), Value: []byte("v2")},
@@ -106,13 +106,13 @@ func TestMapState_Size(t *testing.T) {
 	assert.Equal(t, 1, state.Size(), "map should have size 1 after deleting one item")
 
 	// Test updating existing items
-	state = states.NewMapState("test", states.WithCodec(codec))
+	state = states.NewMapState("test", codec)
 	state.Set("k1", "v1")
 	state.Set("k1", "v2") // update same key
 	assert.Equal(t, 1, state.Size(), "map should have size 1 after updating same key")
 
 	// Test delete then add same key
-	state = states.NewMapState("test", states.WithCodec(codec))
+	state = states.NewMapState("test", codec)
 	state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 	})
