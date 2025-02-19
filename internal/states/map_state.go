@@ -1,4 +1,4 @@
-package rxn
+package states
 
 import (
 	"iter"
@@ -142,7 +142,7 @@ func (s *MapState[K, V]) Mutations() ([]internal.StateMutation, error) {
 	return mutations, nil
 }
 
-func (s *MapState[K, V]) Load(entries []StateEntry) error {
+func (s *MapState[K, V]) Load(entries []internal.StateEntry) error {
 	result := make(map[K]V, len(entries))
 	for _, e := range entries {
 		key, err := s.codec.DecodeKey(e.Key)
@@ -169,7 +169,7 @@ func (s *MapState[K, V]) Size() int {
 	return s.size
 }
 
-var _ StateItem = (*MapState[any, any])(nil)
+var _ internal.StateItem = (*MapState[any, any])(nil)
 
 // ScalarMapStateCodec implements MapStateCodec for ProtoScalar types.
 type ScalarMapStateCodec[K comparable, V any] struct{}

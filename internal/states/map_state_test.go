@@ -1,4 +1,4 @@
-package rxn_test
+package states_test
 
 import (
 	"reflect"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/rxn"
+	"reduction.dev/reduction-go/internal/states"
 )
 
 func TestMapState_PutMutation(t *testing.T) {
-	state := rxn.NewMapState("id", rxn.WithCodec(codec))
+	state := states.NewMapState("id", states.WithCodec(codec))
 	state.Set("k1", "v1")
 
 	mutations, err := state.Mutations()
@@ -32,8 +32,8 @@ func TestMapState_PutMutation(t *testing.T) {
 }
 
 func TestMapState_DeleteMutation(t *testing.T) {
-	state := rxn.NewMapState("id", rxn.WithCodec(codec))
-	state.Load([]rxn.StateEntry{{
+	state := states.NewMapState("id", states.WithCodec(codec))
+	state.Load([]internal.StateEntry{{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
 	}})
@@ -57,8 +57,8 @@ func TestMapState_DeleteMutation(t *testing.T) {
 }
 
 func TestMapState_All(t *testing.T) {
-	state := rxn.NewMapState("id", rxn.WithCodec(codec))
-	state.Load([]rxn.StateEntry{{
+	state := states.NewMapState("id", states.WithCodec(codec))
+	state.Load([]internal.StateEntry{{
 		Key: []byte("unchanged"), Value: []byte("unchanged"),
 	}, {
 		Key: []byte("modified"), Value: []byte("to-be-modified"),
@@ -83,7 +83,7 @@ func TestMapState_All(t *testing.T) {
 }
 
 func TestMapState_Size(t *testing.T) {
-	state := rxn.NewMapState("test", rxn.WithCodec(codec))
+	state := states.NewMapState("test", states.WithCodec(codec))
 
 	// Test empty map
 	assert.Equal(t, 0, state.Size(), "empty map should have size 0")
@@ -94,8 +94,8 @@ func TestMapState_Size(t *testing.T) {
 	assert.Equal(t, 2, state.Size(), "map should have size 2 after adding two items")
 
 	// Test after loading items
-	state = rxn.NewMapState("test", rxn.WithCodec(codec))
-	state.Load([]rxn.StateEntry{
+	state = states.NewMapState("test", states.WithCodec(codec))
+	state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 		{Key: []byte("k2"), Value: []byte("v2")},
 	})
@@ -106,14 +106,14 @@ func TestMapState_Size(t *testing.T) {
 	assert.Equal(t, 1, state.Size(), "map should have size 1 after deleting one item")
 
 	// Test updating existing items
-	state = rxn.NewMapState("test", rxn.WithCodec(codec))
+	state = states.NewMapState("test", states.WithCodec(codec))
 	state.Set("k1", "v1")
 	state.Set("k1", "v2") // update same key
 	assert.Equal(t, 1, state.Size(), "map should have size 1 after updating same key")
 
 	// Test delete then add same key
-	state = rxn.NewMapState("test", rxn.WithCodec(codec))
-	state.Load([]rxn.StateEntry{
+	state = states.NewMapState("test", states.WithCodec(codec))
+	state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 	})
 	state.Delete("k1")
@@ -140,4 +140,4 @@ func (m MapStateCodec) DecodeValue(data []byte) (string, error) {
 	return string(data), nil
 }
 
-var codec rxn.MapStateCodec[string, string] = MapStateCodec{}
+var codec states.MapStateCodec[string, string] = MapStateCodec{}
