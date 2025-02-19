@@ -1,3 +1,9 @@
+// This package has APIs for running the Reduction handler server directly.  In
+// general, you should use [reduction.dev/reduction-go/rxn.Run] which supports
+// the `serve` sub command for running the server.
+//
+// This package is currently used for integration testing in the main reduction
+// repo and may be removed.
 package rxnsvr
 
 import (

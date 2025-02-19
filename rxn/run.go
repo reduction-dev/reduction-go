@@ -10,8 +10,9 @@ import (
 	"reduction.dev/reduction-go/rxnsvr"
 )
 
-// Run accepts either a "start" or "config" command. Config prints the job
-// config to stdout. Start runs the job on ":8080".
+// Run provides a CLI for the provided job configuration and handles either a
+// "start" or "config" command. Config prints the job config to stdout. Start
+// runs the job on ":8080".
 func Run(config *jobs.Job) {
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: %s <command>", os.Args[0])

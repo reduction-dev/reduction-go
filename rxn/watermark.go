@@ -7,7 +7,7 @@ import (
 	"reduction.dev/reduction-go/internal"
 )
 
-// Watermark retrieves the current watermark for the operator
+// Watermark retrieves the current watermark for the operator.
 func Watermark(ctx context.Context) time.Time {
 	watermark, ok := ctx.Value(internal.WatermarkContextKey).(time.Time)
 	if !ok {
