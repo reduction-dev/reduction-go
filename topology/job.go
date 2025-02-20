@@ -101,7 +101,3 @@ func (d *document) Marshal() []byte {
 }
 
 type Source = types.Source
-
-type Sink = types.Sink
-
-type KeyedEvent = types.KeyedEvent
