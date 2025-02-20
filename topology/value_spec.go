@@ -15,6 +15,12 @@ type ValueSpec[T any] struct {
 	StateSpec[states.ValueState[T]]
 }
 
+type ValueState[T any] interface {
+	Value() T
+	Set(value T)
+	Drop()
+}
+
 func NewValueSpec[T any](op *Operator, id string, codec ValueCodec[T]) ValueSpec[T] {
 	ss := StateSpec[states.ValueState[T]]{
 		id:    id,
@@ -33,6 +39,10 @@ func NewValueSpec[T any](op *Operator, id string, codec ValueCodec[T]) ValueSpec
 	}
 	op.RegisterSpec(ss.id, ss.query)
 	return ValueSpec[T]{ss}
+}
+
+func (v ValueSpec[T]) StateFor(subject *internal.Subject) ValueState[T] {
+	return v.StateSpec.StateFor(subject)
 }
 
 type ScalarCodec[T internal.ProtoScalar] struct{}
