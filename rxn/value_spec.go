@@ -17,20 +17,20 @@ type ValueSpec[T any] struct {
 
 func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueCodec[T]) ValueSpec[T] {
 	ss := StateSpec[ValueState[T]]{
-		ID:    id,
-		Query: types.QueryTypeGet,
-		Load: func(stateEntries []internal.StateEntry) (*ValueState[T], error) {
+		id:    id,
+		query: types.QueryTypeGet,
+		load: func(stateEntries []internal.StateEntry) (*ValueState[T], error) {
 			ms := &ValueState[T]{
 				name:  id,
 				codec: codec,
 			}
 			return ms, ms.Load(stateEntries)
 		},
-		Mutations: func(state *ValueState[T]) ([]internal.StateMutation, error) {
+		mutations: func(state *ValueState[T]) ([]internal.StateMutation, error) {
 			return state.Mutations()
 		},
 	}
-	op.RegisterSpec(ss.ID, ss.Query)
+	op.RegisterSpec(ss.id, ss.query)
 
 	return ValueSpec[T]{ss}
 }
