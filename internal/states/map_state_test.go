@@ -1,7 +1,6 @@
 package states_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,57 +18,42 @@ func TestMapState_PutMutation(t *testing.T) {
 	state.Set("k1", "v1")
 
 	mutations, err := state.Mutations()
-	if err != nil {
-		t.Fatalf("err getting mutations: %v", err)
-	}
-	if len(mutations) != 1 {
-		t.Fatalf("want 1 mutation, got %d", len(mutations))
-	}
-
-	got := mutations[0].(*internal.PutMutation)
-	want := &internal.PutMutation{
+	assert.NoError(t, err, "getting mutations should not error")
+	assert.Len(t, mutations, 1, "should have exactly one mutation")
+	assert.Equal(t, &internal.PutMutation{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
-	}
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want: %+v; got: %+v", want, got)
-	}
+	}, mutations[0].(*internal.PutMutation))
 }
 
 func TestMapState_DeleteMutation(t *testing.T) {
 	state := states.NewMapState("id", codec)
-	state.Load([]internal.StateEntry{{
+	err := state.Load([]internal.StateEntry{{
 		Key:   []byte("k1"),
 		Value: []byte("v1"),
 	}})
+	assert.NoError(t, err, "loading initial state should not error")
 	state.Delete("k1")
 
 	mutations, err := state.Mutations()
-	if err != nil {
-		t.Fatalf("err getting mutations: %v", err)
-	}
-	if len(mutations) != 1 {
-		t.Fatalf("want 1 mutation, got %d", len(mutations))
-	}
-
-	got := mutations[0].(*internal.DeleteMutation)
-	want := &internal.DeleteMutation{
+	assert.NoError(t, err, "getting mutations should not error")
+	assert.Len(t, mutations, 1, "should have exactly one mutation")
+	assert.Equal(t, &internal.DeleteMutation{
 		Key: []byte("k1"),
-	}
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want: %+v; got: %+v", want, got)
-	}
+	}, mutations[0].(*internal.DeleteMutation))
 }
 
 func TestMapState_All(t *testing.T) {
 	state := states.NewMapState("id", codec)
-	state.Load([]internal.StateEntry{{
+	err := state.Load([]internal.StateEntry{{
 		Key: []byte("unchanged"), Value: []byte("unchanged"),
 	}, {
 		Key: []byte("modified"), Value: []byte("to-be-modified"),
 	}, {
 		Key: []byte("deleted"), Value: []byte("to-be-deleted"),
 	}})
+	assert.NoError(t, err, "loading initial state should not error")
+
 	state.Set("added", "added")
 	state.Set("modified", "modified")
 	state.Delete("deleted")
@@ -78,13 +62,11 @@ func TestMapState_All(t *testing.T) {
 	for k, v := range state.All() {
 		got[k] = v
 	}
-	want := make(map[string]string)
-	want["unchanged"] = "unchanged"
-	want["modified"] = "modified"
-	want["added"] = "added"
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want: %+v; got: %+v", want, got)
-	}
+	assert.Equal(t, map[string]string{
+		"unchanged": "unchanged",
+		"modified":  "modified",
+		"added":     "added",
+	}, got)
 }
 
 func TestMapState_Size(t *testing.T) {
@@ -100,10 +82,11 @@ func TestMapState_Size(t *testing.T) {
 
 	// Test after loading items
 	state = states.NewMapState("test", codec)
-	state.Load([]internal.StateEntry{
+	err := state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 		{Key: []byte("k2"), Value: []byte("v2")},
 	})
+	assert.NoError(t, err, "loading initial state should not error")
 	assert.Equal(t, 2, state.Size(), "map should have size 2 after loading two items")
 
 	// Test after deleting items
@@ -118,9 +101,10 @@ func TestMapState_Size(t *testing.T) {
 
 	// Test delete then add same key
 	state = states.NewMapState("test", codec)
-	state.Load([]internal.StateEntry{
+	err = state.Load([]internal.StateEntry{
 		{Key: []byte("k1"), Value: []byte("v1")},
 	})
+	assert.NoError(t, err, "loading second state should not error")
 	state.Delete("k1")
 	state.Set("k1", "v2")
 	assert.Equal(t, 1, state.Size(), "map should have size 1 after delete-then-add of same key")
