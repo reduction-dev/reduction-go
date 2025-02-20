@@ -17,15 +17,15 @@ import (
 	"reduction.dev/reduction-go/connectors/stdio"
 	"reduction.dev/reduction-go/internal/rpc"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-go/rxn"
+	"reduction.dev/reduction-go/topology"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 )
 
 func TestProcessEventBatch_ProcessKeyedEvent(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		sink := stdio.NewSink(job, "test-sink")
 
 		return &rxnHandler{
@@ -68,7 +68,7 @@ func TestProcessEventBatch_ProcessKeyedEvent(t *testing.T) {
 
 func TestProcessEventBatch_ProcessTimerExpired(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		sink := stdio.NewSink(job, "timer-sink")
 		return &rxnHandler{
 			onTimerExpiredFunc: func(ctx context.Context, subject *rxn.Subject, timer time.Time) error {
@@ -105,7 +105,7 @@ func TestProcessEventBatch_ProcessTimerExpired(t *testing.T) {
 
 func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
@@ -160,7 +160,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 
 func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
@@ -244,7 +244,7 @@ func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 }
 
 func TestProcessEventBatch_EmptyRequest(t *testing.T) {
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		return &rxnHandler{}
 	})
 
@@ -257,7 +257,7 @@ func TestProcessEventBatch_EmptyRequest(t *testing.T) {
 
 func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		onEventSink := stdio.NewSink(job, "on-event-sink")
 		onTimerSink := stdio.NewSink(job, "on-timer-expired-sink")
 
@@ -311,7 +311,7 @@ func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 
 func TestProcessEventBatch_DropValueState(t *testing.T) {
 	now := time.Now().UTC()
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewValueSpec(op, "test-value", rxn.ScalarCodec[int]{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
@@ -367,7 +367,7 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 }
 
 func TestProcessEventBatch_IncrementValueState(t *testing.T) {
-	_, client := setupTestServer(t, func(job *jobs.Job, op *jobs.Operator) types.OperatorHandler {
+	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
 		stateSpec := rxn.NewValueSpec(op, "counter-state", rxn.ScalarCodec[int]{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
@@ -482,13 +482,13 @@ func (m *rxnHandler) KeyEvent(ctx context.Context, rawEvent []byte) ([]rxn.Keyed
 	return nil, nil
 }
 
-func setupTestServer(t *testing.T, factory func(*jobs.Job, *jobs.Operator) types.OperatorHandler) (*httptest.Server, handlerpbconnect.HandlerClient) {
+func setupTestServer(t *testing.T, factory func(*topology.Job, *topology.Operator) types.OperatorHandler) (*httptest.Server, handlerpbconnect.HandlerClient) {
 	t.Helper()
 
-	job := &jobs.Job{}
+	job := &topology.Job{}
 	source := embedded.NewSource(job, "test-source", &embedded.SourceParams{})
-	operator := jobs.NewOperator(job, "test-operator", &jobs.OperatorParams{
-		Handler: func(op *jobs.Operator) types.OperatorHandler {
+	operator := topology.NewOperator(job, "test-operator", &topology.OperatorParams{
+		Handler: func(op *topology.Operator) types.OperatorHandler {
 			return factory(job, op)
 		},
 	})

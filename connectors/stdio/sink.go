@@ -5,8 +5,8 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-go/rxn"
+	"reduction.dev/reduction-go/topology"
 )
 
 type Sink struct {
@@ -15,7 +15,7 @@ type Sink struct {
 
 type Event []byte
 
-func NewSink(job *jobs.Job, id string) *Sink {
+func NewSink(job *topology.Job, id string) *Sink {
 	sink := &Sink{ID: id}
 	job.RegisterSink(sink)
 	return sink

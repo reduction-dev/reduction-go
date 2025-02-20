@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 )
 
 type Sink[T any] struct {
@@ -12,7 +12,7 @@ type Sink[T any] struct {
 	Records []T
 }
 
-func NewSink[T any](job *jobs.Job, id string) *Sink[T] {
+func NewSink[T any](job *topology.Job, id string) *Sink[T] {
 	sink := &Sink[T]{
 		ID:      id,
 		Records: make([]T, 0),

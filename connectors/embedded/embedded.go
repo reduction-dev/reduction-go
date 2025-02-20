@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 )
 
 type Source struct {
@@ -23,7 +23,7 @@ type SourceParams struct {
 	KeyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	source := &Source{
 		id:         id,
 		splitCount: params.SplitCount,

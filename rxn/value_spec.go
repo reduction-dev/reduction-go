@@ -4,7 +4,7 @@ import (
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 )
 
 type ValueCodec[T any] interface {
@@ -16,7 +16,7 @@ type ValueSpec[T any] struct {
 	StateSpec[ValueState[T]]
 }
 
-func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueCodec[T]) ValueSpec[T] {
+func NewValueSpec[T any](op *topology.Operator, id string, codec ValueCodec[T]) ValueSpec[T] {
 	ss := StateSpec[ValueState[T]]{
 		id:    id,
 		query: types.QueryTypeGet,

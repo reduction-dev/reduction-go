@@ -7,8 +7,8 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
 	"reduction.dev/reduction-go/rxn"
+	"reduction.dev/reduction-go/topology"
 )
 
 // Sink Buildtime Config
@@ -29,7 +29,7 @@ type SinkRecord struct {
 	Data []byte
 }
 
-func NewSink(job *jobs.Job, id string, params *SinkParams) *Sink {
+func NewSink(job *topology.Job, id string, params *SinkParams) *Sink {
 	sink := &Sink{
 		id:   id,
 		addr: params.Addr,
@@ -81,7 +81,7 @@ type SourceParams struct {
 	KeyEvent func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
 }
 
-func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	source := &Source{
 		id:       id,
 		addr:     params.Addr,

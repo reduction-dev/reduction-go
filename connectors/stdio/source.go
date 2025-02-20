@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 )
 
 // Source reads events from stdin
@@ -24,7 +24,7 @@ type SourceParams struct {
 	Framing  Framing
 }
 
-func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	source := &Source{
 		id:       id,
 		keyEvent: params.KeyEvent,

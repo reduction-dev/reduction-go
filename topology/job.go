@@ -1,5 +1,5 @@
 // The jobs package provides the serializable definition of a job.
-package jobs
+package topology
 
 import (
 	"encoding/json"

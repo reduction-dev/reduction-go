@@ -4,7 +4,7 @@ import (
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 )
 
 // A MapSpec defines a schema for key-value state.
@@ -26,10 +26,10 @@ type MapCodec[K comparable, T any] = states.MapStateCodec[K, T]
 type ScalarMapCodec[K comparable, T any] = states.ScalarMapCodec[K, T]
 
 // NewMapSpec creates a [MapSpec], registering itself with the provided
-// [jobs.Operator]. The ID with the subject's key uniquely identifies the state
+// [topology.Operator]. The ID with the subject's key uniquely identifies the state
 // for a key to DKV queries. The codec defines how data is parsed and serialized
 // for network transport and storage.
-func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec states.MapStateCodec[K, T]) MapSpec[K, T] {
+func NewMapSpec[K comparable, T any](op *topology.Operator, id string, codec states.MapStateCodec[K, T]) MapSpec[K, T] {
 	ss := StateSpec[MapState[K, T]]{
 		id:    id,
 		query: types.QueryTypeScan,

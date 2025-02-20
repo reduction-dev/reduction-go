@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal/rpc"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/testrunpb"
 )
@@ -22,12 +22,12 @@ import (
 // A TestRun accumulates commands and runs them against `reduction testrun`.
 type TestRun struct {
 	commands [][]byte
-	job      *jobs.Job
+	job      *topology.Job
 	err      error
 	handler  *types.SynthesizedHandler
 }
 
-func NewTestRun(job *jobs.Job) *TestRun {
+func NewTestRun(job *topology.Job) *TestRun {
 	tr := &TestRun{
 		commands: make([][]byte, 0),
 		job:      job,

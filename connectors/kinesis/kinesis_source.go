@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/jobs"
+	"reduction.dev/reduction-go/topology"
 	"reduction.dev/reduction-protocol/kinesispb"
 )
 
@@ -30,7 +30,7 @@ type SourceParams struct {
 	KeyEvent  func(ctx context.Context, record *Record) ([]types.KeyedEvent, error)
 }
 
-func NewSource(job *jobs.Job, id string, params *SourceParams) *Source {
+func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	source := &Source{
 		id:        id,
 		streamARN: params.StreamARN,

@@ -1,4 +1,4 @@
-package jobs
+package topology
 
 type OperatorStates struct {
 	states []State

@@ -1,4 +1,4 @@
-package jobs
+package topology
 
 import "reduction.dev/reduction-go/internal/types"
 
