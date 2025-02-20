@@ -435,7 +435,7 @@ func (m MapStringIntCodec) DecodeValue(data []byte) (int, error) {
 	return int(data[0]), nil
 }
 
-var _ rxn.MapStateCodec[string, int] = MapStringIntCodec{}
+var _ rxn.MapCodec[string, int] = MapStringIntCodec{}
 
 // Helper functions for comparing responses
 func assertResponseEqual(t *testing.T, want, got *handlerpb.ProcessEventBatchResponse) {

@@ -6,7 +6,7 @@ import (
 	"reduction.dev/reduction-go/jobs"
 )
 
-type ValueStateCodec[T any] interface {
+type ValueCodec[T any] interface {
 	Encode(value T) ([]byte, error)
 	Decode(b []byte) (T, error)
 }
@@ -15,11 +15,11 @@ type ValueSpec[T any] struct {
 	StateSpec[ValueState[T]]
 }
 
-func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueStateCodec[T]) ValueSpec[T] {
+func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueCodec[T]) ValueSpec[T] {
 	ss := StateSpec[ValueState[T]]{
 		ID:    id,
 		Query: types.QueryTypeGet,
-		Load: func(stateEntries []StateEntry) (*ValueState[T], error) {
+		Load: func(stateEntries []internal.StateEntry) (*ValueState[T], error) {
 			ms := &ValueState[T]{
 				name:  id,
 				codec: codec,

@@ -45,7 +45,7 @@ func TestValueState_Drop(t *testing.T) {
 	encoded, err := rxn.ScalarCodec[int]{}.Encode(42)
 	assert.NoError(t, err, "encoding initial value should not error")
 
-	err = v.Load([]rxn.StateEntry{{Value: encoded}})
+	err = v.Load([]internal.StateEntry{{Value: encoded}})
 	assert.NoError(t, err, "loading initial value should not error")
 	assert.Equal(t, 42, v.Value(), "initial value should be set")
 
@@ -68,7 +68,7 @@ func TestValueState_Drop(t *testing.T) {
 func TestValueState_IncrementMultipleEvents(t *testing.T) {
 	// Initialize state
 	v := rxn.NewValueState("test-counter", rxn.ScalarCodec[int]{})
-	err := v.Load([]rxn.StateEntry{})
+	err := v.Load([]internal.StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
 	// First event - increment from 0 to 1
@@ -100,7 +100,7 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 
 	// Initialize first value with empty state
 	v1 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
-	err := v1.Load([]rxn.StateEntry{})
+	err := v1.Load([]internal.StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
 	// Set value and get mutations
@@ -113,7 +113,7 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 
 	// Initialize second value with mutation data
 	v2 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
-	err = v2.Load([]rxn.StateEntry{{Value: putMutation.Value}})
+	err = v2.Load([]internal.StateEntry{{Value: putMutation.Value}})
 	assert.NoError(t, err, "loading mutation value should not error")
 
 	// Verify values match

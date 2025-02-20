@@ -19,12 +19,12 @@ type ValueState[T any] struct {
 	name   string
 	value  T
 	status valueStatus
-	codec  ValueStateCodec[T]
+	codec  ValueCodec[T]
 }
 
-func (s *ValueState[T]) Load(entries []StateEntry) error {
+func (s *ValueState[T]) Load(entries []internal.StateEntry) error {
 	// Use a single entry
-	var entry StateEntry
+	var entry internal.StateEntry
 	if len(entries) > 0 {
 		entry = entries[0]
 	}
@@ -83,7 +83,7 @@ func (s *ValueState[T]) Drop() {
 }
 
 // NewValueState creates a new ValueState for either ProtoScalar or BinaryValue types
-func NewValueState[T any](name string, codec ValueStateCodec[T]) *ValueState[T] {
+func NewValueState[T any](name string, codec ValueCodec[T]) *ValueState[T] {
 	return &ValueState[T]{
 		name:  name,
 		codec: codec,

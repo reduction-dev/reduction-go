@@ -1,26 +1,13 @@
 package rxn
 
 import (
-	"context"
 	"fmt"
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
 )
 
-type SourceConfig interface {
-	IsSource()
-	Construct() (string, types.Construct)
-	KeyEvent(ctx context.Context, record []byte) ([]KeyedEvent, error)
-}
-
-type SinkConfig interface {
-	IsSink()
-	Construct() (string, types.Construct)
-}
-
 type Subject = internal.Subject
-type StateEntry = internal.StateEntry
 type StateItem = internal.StateItem
 
 type OperatorHandler = types.OperatorHandler
@@ -29,12 +16,10 @@ type OperatorHandler = types.OperatorHandler
 // tracking time. It's value is arbitrary byte data.
 type KeyedEvent = types.KeyedEvent
 
-type ServerHandler = types.ServerHandler
-
 type StateSpec[T any] struct {
 	ID        string
 	Query     types.QueryType
-	Load      func([]StateEntry) (*T, error)
+	Load      func([]internal.StateEntry) (*T, error)
 	Mutations func(*T) ([]internal.StateMutation, error)
 }
 

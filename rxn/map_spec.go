@@ -15,10 +15,10 @@ type MapSpec[K comparable, T any] struct {
 // MapState is a an instance of key-value state.
 type MapState[K comparable, T any] = states.MapState[K, T]
 
-// MapStateCodec is the interface for encoding and decoding map entries.
-type MapStateCodec[K comparable, T any] = states.MapStateCodec[K, T]
+// MapCodec is the interface for encoding and decoding map entries.
+type MapCodec[K comparable, T any] = states.MapStateCodec[K, T]
 
-// ScalarMapStateCodec is a concrete [MapStateCodec] which uses Protobuf to
+// ScalarMapCodec is a concrete [MapCodec] which uses Protobuf to
 // serialize simple scalar values. Supported types are:
 //   - int, int32, int64
 //   - uint, uint32, uint64
@@ -26,7 +26,7 @@ type MapStateCodec[K comparable, T any] = states.MapStateCodec[K, T]
 //   - string
 //   - bool
 //   - time.Time
-type ScalarMapStateCodec[K comparable, T any] = states.ScalarMapStateCodec[K, T]
+type ScalarMapCodec[K comparable, T any] = states.ScalarMapCodec[K, T]
 
 // NewMapSpec creates a [MapSpec], registering itself with the provided
 // [jobs.Operator]. The ID with the subject's key uniquely identifies the state
@@ -36,7 +36,7 @@ func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec states.
 	ss := StateSpec[MapState[K, T]]{
 		ID:    id,
 		Query: types.QueryTypeScan,
-		Load: func(stateEntries []StateEntry) (*MapState[K, T], error) {
+		Load: func(stateEntries []internal.StateEntry) (*MapState[K, T], error) {
 			ms := states.NewMapState(id, codec)
 			return ms, ms.Load(stateEntries)
 		},
