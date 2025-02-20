@@ -7,8 +7,8 @@ import (
 )
 
 type ValueStateCodec[T any] interface {
-	EncodeValue(value T) ([]byte, error)
-	DecodeValue(b []byte) (T, error)
+	Encode(value T) ([]byte, error)
+	Decode(b []byte) (T, error)
 }
 
 type ValueSpec[T any] struct {

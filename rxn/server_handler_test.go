@@ -323,7 +323,7 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 	})
 
 	// Properly encode the initial value
-	initialValue, err := rxn.ScalarCodec[int]{}.EncodeValue(42)
+	initialValue, err := rxn.ScalarCodec[int]{}.Encode(42)
 	require.NoError(t, err, "encoding initial value should not error")
 
 	got, err := client.ProcessEventBatch(context.Background(), connect.NewRequest(&handlerpb.ProcessEventBatchRequest{
@@ -395,7 +395,7 @@ func TestProcessEventBatch_IncrementValueState(t *testing.T) {
 	}))
 	require.NoError(t, err)
 
-	encodedValue, err := rxn.ScalarCodec[int]{}.EncodeValue(2)
+	encodedValue, err := rxn.ScalarCodec[int]{}.Encode(2)
 	require.NoError(t, err)
 
 	want := &handlerpb.ProcessEventBatchResponse{

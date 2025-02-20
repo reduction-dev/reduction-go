@@ -166,12 +166,12 @@ func (ScalarMapStateCodec[K, V]) DecodeKey(b []byte) (K, error) {
 	return internal.DecodeScalar[K](b)
 }
 
-// EncodeValue encodes the value using encodeScalar.
+// Encode encodes the value using encodeScalar.
 func (ScalarMapStateCodec[K, V]) EncodeValue(value V) ([]byte, error) {
 	return internal.EncodeScalar(value)
 }
 
-// DecodeValue decodes the value using decodeScalar.
+// Decode decodes the value using decodeScalar.
 func (ScalarMapStateCodec[K, V]) DecodeValue(b []byte) (V, error) {
 	return internal.DecodeScalar[V](b)
 }

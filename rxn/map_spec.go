@@ -7,14 +7,31 @@ import (
 	"reduction.dev/reduction-go/jobs"
 )
 
+// A MapSpec defines a schema for key-value state.
 type MapSpec[K comparable, T any] struct {
 	StateSpec[MapState[K, T]]
 }
 
+// MapState is a an instance of key-value state.
 type MapState[K comparable, T any] = states.MapState[K, T]
+
+// MapStateCodec is the interface for encoding and decoding map entries.
 type MapStateCodec[K comparable, T any] = states.MapStateCodec[K, T]
+
+// ScalarMapStateCodec is a concrete [MapStateCodec] which uses Protobuf to
+// serialize simple scalar values. Supported types are:
+//   - int, int32, int64
+//   - uint, uint32, uint64
+//   - float32, float64
+//   - string
+//   - bool
+//   - time.Time
 type ScalarMapStateCodec[K comparable, T any] = states.ScalarMapStateCodec[K, T]
 
+// NewMapSpec creates a [MapSpec], registering itself with the provided
+// [jobs.Operator]. The ID with the subject's key uniquely identifies the state
+// for a key to DKV queries. The codec defines how data is parsed and serialized
+// for network transport and storage.
 func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec states.MapStateCodec[K, T]) MapSpec[K, T] {
 	ss := StateSpec[MapState[K, T]]{
 		ID:    id,

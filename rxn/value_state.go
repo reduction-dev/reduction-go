@@ -33,7 +33,7 @@ func (s *ValueState[T]) Load(entries []StateEntry) error {
 		return nil
 	}
 
-	value, err := s.codec.DecodeValue(entry.Value)
+	value, err := s.codec.Decode(entry.Value)
 	if err != nil {
 		return fmt.Errorf("failed to decode value: %w", err)
 	}
@@ -52,7 +52,7 @@ func (s *ValueState[T]) Mutations() ([]internal.StateMutation, error) {
 		}}, nil
 	}
 
-	data, err := s.codec.EncodeValue(s.value)
+	data, err := s.codec.Encode(s.value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode value: %w", err)
 	}
@@ -92,14 +92,12 @@ func NewValueState[T any](name string, codec ValueStateCodec[T]) *ValueState[T] 
 
 var _ StateItem = (*ValueState[int])(nil)
 
-type ProtoScalar = internal.ProtoScalar
+type ScalarCodec[T internal.ProtoScalar] struct{}
 
-type ScalarCodec[T ProtoScalar] struct{}
-
-func (ScalarCodec[T]) EncodeValue(value T) ([]byte, error) {
+func (ScalarCodec[T]) Encode(value T) ([]byte, error) {
 	return internal.EncodeScalar(value)
 }
 
-func (ScalarCodec[T]) DecodeValue(b []byte) (T, error) {
+func (ScalarCodec[T]) Decode(b []byte) (T, error) {
 	return internal.DecodeScalar[T](b)
 }

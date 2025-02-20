@@ -42,7 +42,7 @@ func TestValueState_Name(t *testing.T) {
 func TestValueState_Drop(t *testing.T) {
 	// Initialize value state with a value
 	v := rxn.NewValueState("test-drop", rxn.ScalarCodec[int]{})
-	encoded, err := rxn.ScalarCodec[int]{}.EncodeValue(42)
+	encoded, err := rxn.ScalarCodec[int]{}.Encode(42)
 	assert.NoError(t, err, "encoding initial value should not error")
 
 	err = v.Load([]rxn.StateEntry{{Value: encoded}})
@@ -85,7 +85,7 @@ func TestValueState_IncrementMultipleEvents(t *testing.T) {
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
 	putMutation := mutations[0].(*internal.PutMutation)
-	decodedValue, err := rxn.ScalarCodec[int]{}.DecodeValue(putMutation.Value)
+	decodedValue, err := rxn.ScalarCodec[int]{}.Decode(putMutation.Value)
 	assert.NoError(t, err, "decoding mutation value should not error")
 	assert.Equal(t, 2, decodedValue, "mutation should contain final value of 2")
 }

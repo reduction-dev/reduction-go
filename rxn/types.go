@@ -22,15 +22,18 @@ type SinkConfig interface {
 type Subject = internal.Subject
 type StateEntry = internal.StateEntry
 type StateItem = internal.StateItem
-type OperatorHandler = types.OperatorHandler
-type KeyedEvent = types.KeyedEvent
-type ServerHandler = types.ServerHandler
 
-type QueryType = types.QueryType
+type OperatorHandler = types.OperatorHandler
+
+// KeyedEvent has a Key used for partitioning data and a timestamp used for
+// tracking time. It's value is arbitrary byte data.
+type KeyedEvent = types.KeyedEvent
+
+type ServerHandler = types.ServerHandler
 
 type StateSpec[T any] struct {
 	ID        string
-	Query     QueryType
+	Query     types.QueryType
 	Load      func([]StateEntry) (*T, error)
 	Mutations func(*T) ([]internal.StateMutation, error)
 }
