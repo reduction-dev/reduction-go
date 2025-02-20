@@ -1,6 +1,8 @@
 package rxn
 
 import (
+	"context"
+
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
 )
@@ -26,3 +28,8 @@ type OperatorHandler = types.OperatorHandler
 // KeyedEvent has a Key used for partitioning data and a timestamp used for
 // tracking time. It's value is arbitrary byte data.
 type KeyedEvent = types.KeyedEvent
+
+// Sink is a generic interface for collecting values.
+type Sink[T any] interface {
+	Collect(ctx context.Context, value T)
+}

@@ -1,11 +1,15 @@
-// The jobs package provides the serializable definition of a job.
+// The topology package provides the serializable definition of a job.
 package topology
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net"
+	"os"
 
 	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/rxnsvr"
 )
 
 type Job struct {
@@ -14,11 +18,12 @@ type Job struct {
 	WorkingStorageLocation   string
 	SavepointStorageLocation string
 
-	sources []Source
+	sources []types.Source
 	sinks   []types.SinkSynthesizer
 }
 
-func (j *Job) RegisterSource(source Source) {
+// RegisterSource adds a source to the job. Only intended for internal use.
+func (j *Job) RegisterSource(source types.Source) {
 	j.sources = append(j.sources, source)
 }
 
@@ -100,4 +105,32 @@ func (d *document) Marshal() []byte {
 	return data
 }
 
-type Source = types.Source
+// Run provides a CLI for the provided job configuration and handles either a
+// "start" or "config" command. Config prints the job config to stdout. Start
+// runs the job on ":8080".
+func (j *Job) Run() {
+	if len(os.Args) < 2 {
+		log.Fatalf("Usage: %s <command>", os.Args[0])
+	}
+
+	synth, err := j.Synthesize()
+	if err != nil {
+		log.Fatalf("invalid job configuration: %v", err)
+	}
+
+	switch os.Args[1] {
+	case "start":
+		listener, err := net.Listen("tcp", ":8080")
+		if err != nil {
+			log.Fatalf("failed to listen: %v", err)
+		}
+		svr := rxnsvr.New(synth.Handler, rxnsvr.WithListener(listener))
+		if err := svr.Start(); err != nil {
+			log.Fatalf("server stopped with error: %v", err)
+		}
+	case "config":
+		fmt.Printf("%s", synth.Config.Marshal())
+	default:
+		log.Fatalf("Unknown command: %s", os.Args[1])
+	}
+}
