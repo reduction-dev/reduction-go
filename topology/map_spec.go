@@ -10,7 +10,7 @@ import (
 
 // A MapSpec defines a schema for key-value state.
 type MapSpec[K comparable, T any] struct {
-	StateSpec[states.MapState[K, T]]
+	spec StateSpec[states.MapState[K, T]]
 }
 
 type MapState[K comparable, V any] interface {
@@ -59,5 +59,5 @@ func NewMapSpec[K comparable, T any](op *Operator, id string, codec states.MapSt
 }
 
 func (m MapSpec[K, V]) StateFor(subject *internal.Subject) MapState[K, V] {
-	return m.StateSpec.StateFor(subject)
+	return m.spec.StateFor(subject)
 }

@@ -12,7 +12,7 @@ type ValueCodec[T any] interface {
 }
 
 type ValueSpec[T any] struct {
-	StateSpec[states.ValueState[T]]
+	spec StateSpec[states.ValueState[T]]
 }
 
 type ValueState[T any] interface {
@@ -42,7 +42,7 @@ func NewValueSpec[T any](op *Operator, id string, codec ValueCodec[T]) ValueSpec
 }
 
 func (v ValueSpec[T]) StateFor(subject *internal.Subject) ValueState[T] {
-	return v.StateSpec.StateFor(subject)
+	return v.spec.StateFor(subject)
 }
 
 type ScalarCodec[T internal.ProtoScalar] struct{}
