@@ -2,6 +2,7 @@ package rxn
 
 import (
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/states"
 	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/jobs"
 )
@@ -20,14 +21,12 @@ func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueCodec[T]) Valu
 		id:    id,
 		query: types.QueryTypeGet,
 		load: func(stateEntries []internal.StateEntry) (*ValueState[T], error) {
-			ms := &ValueState[T]{
-				name:  id,
-				codec: codec,
-			}
-			return ms, ms.Load(stateEntries)
+			vs := states.NewValueState(id, codec)
+			vs.Load(stateEntries)
+			return &ValueState[T]{internal: vs}, vs.Load(stateEntries)
 		},
 		mutations: func(state *ValueState[T]) ([]internal.StateMutation, error) {
-			return state.Mutations()
+			return state.internal.Mutations()
 		},
 	}
 	op.RegisterSpec(ss.id, ss.query)

@@ -1,4 +1,4 @@
-package rxn_test
+package states
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/rxn"
 )
 
 func TestValueState(t *testing.T) {
@@ -35,14 +34,14 @@ func TestValueState(t *testing.T) {
 }
 
 func TestValueState_Name(t *testing.T) {
-	v := rxn.NewValueState("test-name", rxn.ScalarCodec[int]{})
+	v := NewValueState("test-name", ScalarValueCodec[int]{})
 	assert.Equal(t, "test-name", v.Name(), "name should match the value provided to NewValueState")
 }
 
 func TestValueState_Drop(t *testing.T) {
 	// Initialize value state with a value
-	v := rxn.NewValueState("test-drop", rxn.ScalarCodec[int]{})
-	encoded, err := rxn.ScalarCodec[int]{}.Encode(42)
+	v := NewValueState("test-drop", ScalarValueCodec[int]{})
+	encoded, err := ScalarValueCodec[int]{}.Encode(42)
 	assert.NoError(t, err, "encoding initial value should not error")
 
 	err = v.Load([]internal.StateEntry{{Value: encoded}})
@@ -67,7 +66,7 @@ func TestValueState_Drop(t *testing.T) {
 
 func TestValueState_IncrementMultipleEvents(t *testing.T) {
 	// Initialize state
-	v := rxn.NewValueState("test-counter", rxn.ScalarCodec[int]{})
+	v := NewValueState("test-counter", ScalarValueCodec[int]{})
 	err := v.Load([]internal.StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
@@ -85,7 +84,7 @@ func TestValueState_IncrementMultipleEvents(t *testing.T) {
 	assert.Len(t, mutations, 1, "should have exactly one mutation")
 
 	putMutation := mutations[0].(*internal.PutMutation)
-	decodedValue, err := rxn.ScalarCodec[int]{}.Decode(putMutation.Value)
+	decodedValue, err := ScalarValueCodec[int]{}.Decode(putMutation.Value)
 	assert.NoError(t, err, "decoding mutation value should not error")
 	assert.Equal(t, 2, decodedValue, "mutation should contain final value of 2")
 }
@@ -99,7 +98,7 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 	t.Helper()
 
 	// Initialize first value with empty state
-	v1 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
+	v1 := NewValueState(name, ScalarValueCodec[T]{})
 	err := v1.Load([]internal.StateEntry{})
 	assert.NoError(t, err, "loading empty state should not error")
 
@@ -112,7 +111,7 @@ func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, 
 	putMutation := mutations[0].(*internal.PutMutation)
 
 	// Initialize second value with mutation data
-	v2 := rxn.NewValueState(name, rxn.ScalarCodec[T]{})
+	v2 := NewValueState(name, ScalarValueCodec[T]{})
 	err = v2.Load([]internal.StateEntry{{Value: putMutation.Value}})
 	assert.NoError(t, err, "loading mutation value should not error")
 

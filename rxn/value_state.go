@@ -1,96 +1,36 @@
 package rxn
 
 import (
-	"fmt"
-
 	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/states"
 )
 
-// valueStatus represents the sync state of a value.
-type valueStatus int
-
-const (
-	statusInitial valueStatus = iota
-	statusUpdated
-	statusDeleted
-)
-
+// ValueState provides access to a single value of type T
 type ValueState[T any] struct {
-	name   string
-	value  T
-	status valueStatus
-	codec  ValueCodec[T]
+	internal *states.ValueState[T]
 }
 
-func (s *ValueState[T]) Load(entries []internal.StateEntry) error {
-	// Use a single entry
-	var entry internal.StateEntry
-	if len(entries) > 0 {
-		entry = entries[0]
-	}
-
-	if len(entry.Value) == 0 {
-		return nil
-	}
-
-	value, err := s.codec.Decode(entry.Value)
-	if err != nil {
-		return fmt.Errorf("failed to decode value: %w", err)
-	}
-	s.value = value
-	return nil
-}
-
-func (s *ValueState[T]) Mutations() ([]internal.StateMutation, error) {
-	if s.status == statusInitial {
-		return nil, nil
-	}
-
-	if s.status == statusDeleted {
-		return []internal.StateMutation{&internal.DeleteMutation{
-			Key: []byte(s.Name()),
-		}}, nil
-	}
-
-	data, err := s.codec.Encode(s.value)
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode value: %w", err)
-	}
-
-	return []internal.StateMutation{&internal.PutMutation{
-		Key:   []byte(s.Name()),
-		Value: data,
-	}}, nil
-}
-
-func (s *ValueState[T]) Name() string {
-	return s.name
-}
-
+// Value returns the current value stored in the state
 func (s *ValueState[T]) Value() T {
-	return s.value
+	return s.internal.Value()
 }
 
+// Set updates the value stored in the state
 func (s *ValueState[T]) Set(value T) {
-	s.status = statusUpdated
-	s.value = value
+	s.internal.Set(value)
 }
 
+// Drop removes the value from the state
 func (s *ValueState[T]) Drop() {
-	s.status = statusDeleted
-	var zero T
-	s.value = zero
+	s.internal.Drop()
 }
 
-// NewValueState creates a new ValueState for either ProtoScalar or BinaryValue types
+// NewValueState creates a new ValueState instance with the given name and codec
 func NewValueState[T any](name string, codec ValueCodec[T]) *ValueState[T] {
 	return &ValueState[T]{
-		name:  name,
-		codec: codec,
+		internal: states.NewValueState(name, codec),
 	}
 }
-
-var _ internal.StateItem = (*ValueState[int])(nil)
 
 type ScalarCodec[T internal.ProtoScalar] struct{}
 
