@@ -4,6 +4,7 @@ import (
 	"iter"
 
 	"reduction.dev/reduction-go/internal/states"
+	"reduction.dev/reduction-go/topology"
 )
 
 // MapState provides access to key-value state
@@ -37,7 +38,7 @@ func (s *MapState[K, V]) Size() int {
 }
 
 // NewMapState creates a new MapState instance with the given name and codec
-func NewMapState[K comparable, V any](name string, codec MapCodec[K, V]) *MapState[K, V] {
+func NewMapState[K comparable, V any](name string, codec topology.MapCodec[K, V]) *MapState[K, V] {
 	return &MapState[K, V]{
 		internal: states.NewMapState(name, codec),
 	}

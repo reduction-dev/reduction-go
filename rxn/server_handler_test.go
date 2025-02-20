@@ -106,7 +106,7 @@ func TestProcessEventBatch_ProcessTimerExpired(t *testing.T) {
 func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 	now := time.Now().UTC()
 	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
-		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
+		stateSpec := topology.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
@@ -161,7 +161,7 @@ func TestProcessEventBatch_ProcessStateMutations(t *testing.T) {
 func TestProcessEventBatch_ProcessMultipleEventsWithState(t *testing.T) {
 	now := time.Now().UTC()
 	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
-		stateSpec := rxn.NewMapSpec(op, "test-state", MapStringIntCodec{})
+		stateSpec := topology.NewMapSpec(op, "test-state", MapStringIntCodec{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
@@ -312,7 +312,7 @@ func TestProcessEventBatch_MixedEventTypes(t *testing.T) {
 func TestProcessEventBatch_DropValueState(t *testing.T) {
 	now := time.Now().UTC()
 	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
-		stateSpec := rxn.NewValueSpec(op, "test-value", rxn.ScalarCodec[int]{})
+		stateSpec := topology.NewValueSpec(op, "test-value", topology.ScalarCodec[int]{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
@@ -323,7 +323,7 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 	})
 
 	// Properly encode the initial value
-	initialValue, err := rxn.ScalarCodec[int]{}.Encode(42)
+	initialValue, err := topology.ScalarCodec[int]{}.Encode(42)
 	require.NoError(t, err, "encoding initial value should not error")
 
 	got, err := client.ProcessEventBatch(context.Background(), connect.NewRequest(&handlerpb.ProcessEventBatchRequest{
@@ -368,7 +368,7 @@ func TestProcessEventBatch_DropValueState(t *testing.T) {
 
 func TestProcessEventBatch_IncrementValueState(t *testing.T) {
 	_, client := setupTestServer(t, func(job *topology.Job, op *topology.Operator) types.OperatorHandler {
-		stateSpec := rxn.NewValueSpec(op, "counter-state", rxn.ScalarCodec[int]{})
+		stateSpec := topology.NewValueSpec(op, "counter-state", topology.ScalarCodec[int]{})
 		return &rxnHandler{
 			onEventFunc: func(ctx context.Context, subject *rxn.Subject, event rxn.KeyedEvent) error {
 				state := stateSpec.StateFor(subject)
@@ -395,7 +395,7 @@ func TestProcessEventBatch_IncrementValueState(t *testing.T) {
 	}))
 	require.NoError(t, err)
 
-	encodedValue, err := rxn.ScalarCodec[int]{}.Encode(2)
+	encodedValue, err := topology.ScalarCodec[int]{}.Encode(2)
 	require.NoError(t, err)
 
 	want := &handlerpb.ProcessEventBatchResponse{
@@ -435,7 +435,7 @@ func (m MapStringIntCodec) DecodeValue(data []byte) (int, error) {
 	return int(data[0]), nil
 }
 
-var _ rxn.MapCodec[string, int] = MapStringIntCodec{}
+var _ topology.MapCodec[string, int] = MapStringIntCodec{}
 
 // Helper functions for comparing responses
 func assertResponseEqual(t *testing.T, want, got *handlerpb.ProcessEventBatchResponse) {

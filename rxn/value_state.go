@@ -1,8 +1,8 @@
 package rxn
 
 import (
-	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
+	"reduction.dev/reduction-go/topology"
 )
 
 // ValueState provides access to a single value of type T
@@ -26,18 +26,8 @@ func (s *ValueState[T]) Drop() {
 }
 
 // NewValueState creates a new ValueState instance with the given name and codec
-func NewValueState[T any](name string, codec ValueCodec[T]) *ValueState[T] {
+func NewValueState[T any](name string, codec topology.ValueCodec[T]) *ValueState[T] {
 	return &ValueState[T]{
 		internal: states.NewValueState(name, codec),
 	}
-}
-
-type ScalarCodec[T internal.ProtoScalar] struct{}
-
-func (ScalarCodec[T]) Encode(value T) ([]byte, error) {
-	return internal.EncodeScalar(value)
-}
-
-func (ScalarCodec[T]) Decode(b []byte) (T, error) {
-	return internal.DecodeScalar[T](b)
 }

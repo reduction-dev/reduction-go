@@ -1,15 +1,14 @@
-package rxn
+package topology
 
 import (
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/topology"
 )
 
 // A MapSpec defines a schema for key-value state.
 type MapSpec[K comparable, T any] struct {
-	StateSpec[MapState[K, T]]
+	StateSpec[states.MapState[K, T]]
 }
 
 // MapCodec is the interface for encoding and decoding map entries.
@@ -29,23 +28,22 @@ type ScalarMapCodec[K comparable, T any] = states.ScalarMapCodec[K, T]
 // [topology.Operator]. The ID with the subject's key uniquely identifies the state
 // for a key to DKV queries. The codec defines how data is parsed and serialized
 // for network transport and storage.
-func NewMapSpec[K comparable, T any](op *topology.Operator, id string, codec states.MapStateCodec[K, T]) MapSpec[K, T] {
-	ss := StateSpec[MapState[K, T]]{
+func NewMapSpec[K comparable, T any](op *Operator, id string, codec states.MapStateCodec[K, T]) MapSpec[K, T] {
+	ss := StateSpec[states.MapState[K, T]]{
 		id:    id,
 		query: types.QueryTypeScan,
-		load: func(stateEntries []internal.StateEntry) (*MapState[K, T], error) {
+		load: func(stateEntries []internal.StateEntry) (*states.MapState[K, T], error) {
 			internalState := states.NewMapState(id, codec)
 			err := internalState.Load(stateEntries)
 			if err != nil {
 				return nil, err
 			}
-			return &MapState[K, T]{internal: internalState}, nil
+			return internalState, nil
 		},
-		mutations: func(state *MapState[K, T]) ([]internal.StateMutation, error) {
-			return state.internal.Mutations()
+		mutations: func(state *states.MapState[K, T]) ([]internal.StateMutation, error) {
+			return state.Mutations()
 		},
 	}
 	op.RegisterSpec(ss.id, ss.query)
-
 	return MapSpec[K, T]{ss}
 }
