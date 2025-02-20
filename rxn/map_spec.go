@@ -12,9 +12,6 @@ type MapSpec[K comparable, T any] struct {
 	StateSpec[MapState[K, T]]
 }
 
-// MapState is a an instance of key-value state.
-type MapState[K comparable, T any] = states.MapState[K, T]
-
 // MapCodec is the interface for encoding and decoding map entries.
 type MapCodec[K comparable, T any] = states.MapStateCodec[K, T]
 
@@ -37,11 +34,15 @@ func NewMapSpec[K comparable, T any](op *jobs.Operator, id string, codec states.
 		id:    id,
 		query: types.QueryTypeScan,
 		load: func(stateEntries []internal.StateEntry) (*MapState[K, T], error) {
-			ms := states.NewMapState(id, codec)
-			return ms, ms.Load(stateEntries)
+			internalState := states.NewMapState(id, codec)
+			err := internalState.Load(stateEntries)
+			if err != nil {
+				return nil, err
+			}
+			return &MapState[K, T]{internal: internalState}, nil
 		},
 		mutations: func(state *MapState[K, T]) ([]internal.StateMutation, error) {
-			return state.Mutations()
+			return state.internal.Mutations()
 		},
 	}
 	op.RegisterSpec(ss.id, ss.query)

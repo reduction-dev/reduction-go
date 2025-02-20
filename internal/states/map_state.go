@@ -142,6 +142,7 @@ func (s *MapState[K, V]) Load(entries []internal.StateEntry) error {
 	return nil
 }
 
+// Name returns the state's name
 func (s *MapState[K, V]) Name() string {
 	return s.name
 }

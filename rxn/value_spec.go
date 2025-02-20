@@ -21,9 +21,12 @@ func NewValueSpec[T any](op *jobs.Operator, id string, codec ValueCodec[T]) Valu
 		id:    id,
 		query: types.QueryTypeGet,
 		load: func(stateEntries []internal.StateEntry) (*ValueState[T], error) {
-			vs := states.NewValueState(id, codec)
-			vs.Load(stateEntries)
-			return &ValueState[T]{internal: vs}, vs.Load(stateEntries)
+			internalState := states.NewValueState(id, codec)
+			err := internalState.Load(stateEntries)
+			if err != nil {
+				return nil, err
+			}
+			return &ValueState[T]{internal: internalState}, nil
 		},
 		mutations: func(state *ValueState[T]) ([]internal.StateMutation, error) {
 			return state.internal.Mutations()

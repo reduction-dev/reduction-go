@@ -9,6 +9,11 @@ import (
 	"reduction.dev/reduction-go/internal/states"
 )
 
+func TestMapState_Name(t *testing.T) {
+	state := states.NewMapState("test-name", codec)
+	assert.Equal(t, "test-name", state.Name())
+}
+
 func TestMapState_PutMutation(t *testing.T) {
 	state := states.NewMapState("id", codec)
 	state.Set("k1", "v1")
