@@ -90,7 +90,7 @@ func NewValueState[T any](name string, codec ValueCodec[T]) *ValueState[T] {
 	}
 }
 
-var _ StateItem = (*ValueState[int])(nil)
+var _ internal.StateItem = (*ValueState[int])(nil)
 
 type ScalarCodec[T internal.ProtoScalar] struct{}
 

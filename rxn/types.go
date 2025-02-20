@@ -8,7 +8,6 @@ import (
 )
 
 type Subject = internal.Subject
-type StateItem = internal.StateItem
 
 type OperatorHandler = types.OperatorHandler
 
