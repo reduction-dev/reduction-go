@@ -19,15 +19,16 @@ import (
 	"reduction.dev/reduction-protocol/testrunpb"
 )
 
-type TestRunNext struct {
+// A TestRun accumulates commands and runs them against `reduction testrun`.
+type TestRun struct {
 	commands [][]byte
 	job      *jobs.Job
 	err      error
 	handler  *types.SynthesizedHandler
 }
 
-func NewTestRun(job *jobs.Job) *TestRunNext {
-	tr := &TestRunNext{
+func NewTestRun(job *jobs.Job) *TestRun {
+	tr := &TestRun{
 		commands: make([][]byte, 0),
 		job:      job,
 	}
@@ -41,7 +42,7 @@ func NewTestRun(job *jobs.Job) *TestRunNext {
 	return tr
 }
 
-func (t *TestRunNext) AddRecord(record []byte) {
+func (t *TestRun) AddRecord(record []byte) {
 	if t.err != nil {
 		return
 	}
@@ -73,7 +74,7 @@ func (t *TestRunNext) AddRecord(record []byte) {
 	}
 }
 
-func (t *TestRunNext) AddWatermark() {
+func (t *TestRun) AddWatermark() {
 	if t.err != nil {
 		return
 	}
@@ -91,7 +92,7 @@ func (t *TestRunNext) AddWatermark() {
 	t.commands = append(t.commands, msgData)
 }
 
-func (t *TestRunNext) Run() error {
+func (t *TestRun) Run() error {
 	if t.err != nil {
 		return t.err
 	}
