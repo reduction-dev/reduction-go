@@ -60,11 +60,6 @@ type OperatorSynthesis struct {
 	Handler OperatorHandler
 }
 
-type JobSynthesis struct {
-	Handler *SynthesizedHandler
-	Config  interface{ Marshal() []byte }
-}
-
 type SynthesizedHandler struct {
 	KeyEventFunc    func(ctx context.Context, record []byte) ([]KeyedEvent, error)
 	OperatorHandler OperatorHandler

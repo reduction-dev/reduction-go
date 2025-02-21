@@ -17,7 +17,7 @@ type Event []byte
 
 func NewSink(job *topology.Job, id string) *Sink {
 	sink := &Sink{ID: id}
-	job.RegisterSink(sink)
+	topology.InternalAccess(job).RegisterSink(sink)
 	return sink
 }
 

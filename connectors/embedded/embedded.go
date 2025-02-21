@@ -31,7 +31,7 @@ func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 		generator:  params.Generator,
 		keyEvent:   params.KeyEvent,
 	}
-	job.RegisterSource(source)
+	topology.InternalAccess(job).RegisterSource(source)
 	return source
 }
 

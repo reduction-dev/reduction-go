@@ -17,7 +17,7 @@ func NewSink[T any](job *topology.Job, id string) *Sink[T] {
 		ID:      id,
 		Records: make([]T, 0),
 	}
-	job.RegisterSink(sink)
+	topology.InternalAccess(job).RegisterSink(sink)
 	return sink
 }
 

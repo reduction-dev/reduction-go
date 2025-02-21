@@ -22,16 +22,24 @@ type Job struct {
 	sinks   []types.SinkSynthesizer
 }
 
-// RegisterSource adds a source to the job. Only intended for internal use.
-func (j *Job) RegisterSource(source types.Source) {
+// registerSource adds a source to the job. Called via InternalAccess by
+// connectors.
+func (j *Job) registerSource(source types.Source) {
 	j.sources = append(j.sources, source)
 }
 
-func (j *Job) RegisterSink(sink types.SinkSynthesizer) {
+// registerSink adds a sink to the job. Called via InternalAccess by
+// connectors.
+func (j *Job) registerSink(sink types.SinkSynthesizer) {
 	j.sinks = append(j.sinks, sink)
 }
 
-func (j *Job) Synthesize() (*types.JobSynthesis, error) {
+type jobSynthesis struct {
+	Handler *types.SynthesizedHandler
+	Config  interface{ Marshal() []byte }
+}
+
+func (j *Job) Synthesize() (*jobSynthesis, error) {
 	if len(j.sources) == 0 {
 		return nil, fmt.Errorf("job is missing source")
 	}
@@ -81,7 +89,7 @@ func (j *Job) Synthesize() (*types.JobSynthesis, error) {
 		return nil, fmt.Errorf("Reduction currently supports only one operator per source but has %d configured", len(sourceSynth.Operators))
 	}
 
-	return &types.JobSynthesis{
+	return &jobSynthesis{
 		Handler: &types.SynthesizedHandler{
 			KeyEventFunc:    sourceSynth.KeyEventFunc,
 			OperatorHandler: sourceSynth.Operators[0].Synthesize().Handler,

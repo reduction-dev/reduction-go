@@ -34,7 +34,7 @@ func NewSink(job *topology.Job, id string, params *SinkParams) *Sink {
 		id:   id,
 		addr: params.Addr,
 	}
-	job.RegisterSink(sink)
+	topology.InternalAccess(job).RegisterSink(sink)
 	return sink
 }
 
@@ -88,7 +88,7 @@ func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 		topics:   params.Topics,
 		keyEvent: params.KeyEvent,
 	}
-	job.RegisterSource(source)
+	topology.InternalAccess(job).RegisterSource(source)
 	return source
 }
 
