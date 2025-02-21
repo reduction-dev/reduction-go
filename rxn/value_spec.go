@@ -19,12 +19,12 @@ type ValueState[T any] interface {
 	Drop()
 }
 
-type ScalarCodec[T states.ProtoScalar] struct{}
+type ScalarValueCodec[T states.ProtoScalar] struct{}
 
-func (ScalarCodec[T]) Encode(value T) ([]byte, error) {
+func (ScalarValueCodec[T]) Encode(value T) ([]byte, error) {
 	return states.EncodeScalar(value)
 }
 
-func (ScalarCodec[T]) Decode(b []byte) (T, error) {
+func (ScalarValueCodec[T]) Decode(b []byte) (T, error) {
 	return states.DecodeScalar[T](b)
 }
