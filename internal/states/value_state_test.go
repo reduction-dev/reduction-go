@@ -94,7 +94,7 @@ func TestValueState_IncrementMultipleEvents(t *testing.T) {
 // 2. Set a value and get mutations
 // 3. Initialize a new instance with those mutations
 // 4. Verify the value matches
-func testValueStateRoundTrip[T internal.ProtoScalar](t *testing.T, name string, testValue T) {
+func testValueStateRoundTrip[T ProtoScalar](t *testing.T, name string, testValue T) {
 	t.Helper()
 
 	// Initialize first value with empty state

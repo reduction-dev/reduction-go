@@ -97,12 +97,12 @@ func NewValueState[T any](name string, codec ValueCodec[T]) *ValueState[T] {
 var _ internal.StateItem = (*ValueState[int])(nil)
 
 // ScalarValueCodec is a codec for simple scalar values using protobuf serialization
-type ScalarValueCodec[T internal.ProtoScalar] struct{}
+type ScalarValueCodec[T ProtoScalar] struct{}
 
 func (c ScalarValueCodec[T]) Encode(value T) ([]byte, error) {
-	return internal.EncodeScalar(value)
+	return EncodeScalar(value)
 }
 
 func (c ScalarValueCodec[T]) Decode(b []byte) (T, error) {
-	return internal.DecodeScalar[T](b)
+	return DecodeScalar[T](b)
 }

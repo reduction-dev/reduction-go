@@ -1,7 +1,7 @@
 package rxn
 
 import (
-	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/states"
 )
 
 type ValueCodec[T any] interface {
@@ -19,12 +19,12 @@ type ValueState[T any] interface {
 	Drop()
 }
 
-type ScalarCodec[T internal.ProtoScalar] struct{}
+type ScalarCodec[T states.ProtoScalar] struct{}
 
 func (ScalarCodec[T]) Encode(value T) ([]byte, error) {
-	return internal.EncodeScalar(value)
+	return states.EncodeScalar(value)
 }
 
 func (ScalarCodec[T]) Decode(b []byte) (T, error) {
-	return internal.DecodeScalar[T](b)
+	return states.DecodeScalar[T](b)
 }

@@ -1,4 +1,4 @@
-package internal_test
+package states_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"reduction.dev/reduction-go/internal"
+	"reduction.dev/reduction-go/internal/states"
 )
 
 func TestScalarCodec(t *testing.T) {
@@ -23,9 +23,9 @@ func TestScalarCodec(t *testing.T) {
 
 func roundTrip[T any](t *testing.T, val T, msg string) {
 	t.Helper()
-	bytes, err := internal.EncodeScalar(val)
+	bytes, err := states.EncodeScalar(val)
 	require.NoError(t, err, "no error encoding %s", msg)
-	decoded, err := internal.DecodeScalar[T](bytes)
+	decoded, err := states.DecodeScalar[T](bytes)
 	require.NoError(t, err, "no error decoding %s", msg)
 	assert.Equal(t, val, decoded, "decoding values for %s", msg)
 }
@@ -33,12 +33,12 @@ func roundTrip[T any](t *testing.T, val T, msg string) {
 func TestScalarCodecErrors(t *testing.T) {
 	// Test encoding unsupported type
 	type unsupportedType struct{}
-	_, err := internal.EncodeScalar(unsupportedType{})
+	_, err := states.EncodeScalar(unsupportedType{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported type")
 
 	// Test decoding invalid bytes
 	invalidBytes := []byte("invalid")
-	_, err = internal.DecodeScalar[int](invalidBytes)
+	_, err = states.DecodeScalar[int](invalidBytes)
 	assert.ErrorContains(t, err, "failed to unmarshal int")
 }
