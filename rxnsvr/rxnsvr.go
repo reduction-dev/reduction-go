@@ -33,7 +33,7 @@ func WithListener(l net.Listener) func(server *Server) {
 }
 
 // Create a new server instance
-func New(handler internal.ServerHandler, opts ...Option) *Server {
+func New(handler *internal.SynthesizedHandler, opts ...Option) *Server {
 	mux := http.NewServeMux()
 
 	// Add connect service to mux

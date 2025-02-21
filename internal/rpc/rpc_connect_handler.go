@@ -12,10 +12,10 @@ import (
 
 // Receive connect requests and invoke the user's handler methods.
 type ConnectHandler struct {
-	rxnHandler internal.ServerHandler
+	rxnHandler *internal.SynthesizedHandler
 }
 
-func NewConnectHandler(handler internal.ServerHandler) *ConnectHandler {
+func NewConnectHandler(handler *internal.SynthesizedHandler) *ConnectHandler {
 	return &ConnectHandler{handler}
 }
 

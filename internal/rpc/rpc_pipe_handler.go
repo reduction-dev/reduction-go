@@ -15,12 +15,12 @@ import (
 
 // Receive messages over a unix pipe and invoke the user's handler methods.
 type PipeHandler struct {
-	rxnHandler internal.ServerHandler
+	rxnHandler *internal.SynthesizedHandler
 	stdin      io.Writer
 	stdout     io.Reader
 }
 
-func NewPipeHandler(handler internal.ServerHandler, stdin io.Writer, stdout io.Reader) *PipeHandler {
+func NewPipeHandler(handler *internal.SynthesizedHandler, stdin io.Writer, stdout io.Reader) *PipeHandler {
 	return &PipeHandler{
 		rxnHandler: handler,
 		stdin:      stdin,
