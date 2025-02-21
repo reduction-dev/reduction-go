@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Subject provides APIs for interacting withing the currently keyed scope.
 type Subject interface {
 	// Timestamp returns the timestamp associated with the current event.
 	Timestamp() time.Time
