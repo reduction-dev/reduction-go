@@ -58,8 +58,6 @@ func (s *Sink) Collect(ctx context.Context, value *SinkRecord) {
 	subject.AddSinkRequest(s.id, payload)
 }
 
-var _ internal.SinkRuntime[*SinkRecord] = (*Sink)(nil)
-
 // Source Buildtime Config
 
 type Source struct {
