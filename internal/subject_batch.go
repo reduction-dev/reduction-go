@@ -7,11 +7,12 @@ import (
 )
 
 type lazySubjectBatch struct {
-	subjects map[string]*Subject                // <subject-key>:<subject>
-	state    map[string]map[string][]StateEntry // <subject-key>:<state-id>:<state-entries>
+	subjects  map[string]*Subject                // <subject-key>:<subject>
+	state     map[string]map[string][]StateEntry // <subject-key>:<state-id>:<state-entries>
+	watermark time.Time
 }
 
-func NewLazySubjectBatch(keyStates []*handlerpb.KeyState) *lazySubjectBatch {
+func NewLazySubjectBatch(keyStates []*handlerpb.KeyState, watermark time.Time) *lazySubjectBatch {
 	state := make(map[string]map[string][]StateEntry, len(keyStates))
 	for _, keyState := range keyStates {
 		// Initialize inner map for this key
@@ -26,8 +27,9 @@ func NewLazySubjectBatch(keyStates []*handlerpb.KeyState) *lazySubjectBatch {
 	}
 
 	return &lazySubjectBatch{
-		subjects: make(map[string]*Subject),
-		state:    state,
+		subjects:  make(map[string]*Subject),
+		state:     state,
+		watermark: watermark,
 	}
 }
 
@@ -39,6 +41,7 @@ func (sb *lazySubjectBatch) SubjectFor(key []byte, timestamp time.Time) *Subject
 	subject := &Subject{
 		key:            key,
 		timestamp:      timestamp,
+		watermark:      sb.watermark,
 		state:          sb.stateForKey(key),
 		stateMutations: make(map[string][]StateMutation),
 		usedStates:     make(map[string]LazyMutations),

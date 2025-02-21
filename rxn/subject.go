@@ -12,4 +12,6 @@ type Subject interface {
 	// SetTimer sets a timer for the current key. After the timer expires, the
 	// OnTimerExpired method will be called with this timestamp.
 	SetTimer(ts time.Time)
+	// Watermark returns the current watermark time for this subject
+	Watermark() time.Time
 }

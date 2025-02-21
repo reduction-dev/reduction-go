@@ -121,15 +121,13 @@ func (r *PipeHandler) handleKeyEventBatch(ctx context.Context, req *handlerpb.Ke
 }
 
 func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerpb.ProcessEventBatchRequest) error {
-	subjectBatch := internal.NewLazySubjectBatch(req.KeyStates)
-	watermark := req.Watermark.AsTime()
+	subjectBatch := internal.NewLazySubjectBatch(req.KeyStates, req.Watermark.AsTime())
 
 	for _, event := range req.Events {
 		switch typedEvent := event.Event.(type) {
 		case *handlerpb.Event_KeyedEvent:
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
-			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnEvent(ctx, subject, types.KeyedEvent{
 				Key:       typedEvent.KeyedEvent.Key,
 				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
@@ -140,7 +138,6 @@ func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerp
 		case *handlerpb.Event_TimerExpired:
 			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
 			ctx = context.WithValue(ctx, internal.SubjectContextKey, subject)
-			ctx = context.WithValue(ctx, internal.WatermarkContextKey, watermark)
 			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
 				return err
 			}

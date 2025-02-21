@@ -24,6 +24,8 @@ type Subject struct {
 	key []byte
 	// The current timestamp scope of the handler
 	timestamp time.Time
+	// The current watermark
+	watermark time.Time
 	// Requests to send to sinks
 	sinkRequests []*handlerpb.SinkRequest
 	// Track which states were used during handler execution
@@ -87,6 +89,11 @@ func (s *Subject) Key() []byte {
 // Get the current subject's timestamp
 func (s *Subject) Timestamp() time.Time {
 	return s.timestamp
+}
+
+// Watermark returns the current watermark time for this subject
+func (s *Subject) Watermark() time.Time {
+	return s.watermark
 }
 
 func (s *Subject) LoadState(stateItem StateItem) error {
