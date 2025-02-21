@@ -1,6 +1,6 @@
 package topology
 
-import "reduction.dev/reduction-go/internal/types"
+import "reduction.dev/reduction-go/internal"
 
 type internalJob struct {
 	job *Job
@@ -12,10 +12,10 @@ func InternalAccess(job *Job) internalJob {
 	return internalJob{job: job}
 }
 
-func (j internalJob) RegisterSource(source types.Source) {
+func (j internalJob) RegisterSource(source internal.Source) {
 	j.job.registerSource(source)
 }
 
-func (j internalJob) RegisterSink(sink types.SinkSynthesizer) {
+func (j internalJob) RegisterSink(sink internal.SinkSynthesizer) {
 	j.job.registerSink(sink)
 }

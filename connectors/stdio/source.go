@@ -3,15 +3,15 @@ package stdio
 import (
 	"context"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
 )
 
 // Source reads events from stdin
 type Source struct {
 	id        string
-	keyEvent  func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
-	operators []*types.Operator
+	keyEvent  func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
+	operators []*internal.Operator
 	framing   Framing
 }
 
@@ -20,7 +20,7 @@ type Framing struct {
 }
 
 type SourceParams struct {
-	KeyEvent func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
+	KeyEvent func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 	Framing  Framing
 }
 
@@ -34,13 +34,13 @@ func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	return source
 }
 
-func (s *Source) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *internal.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *Source) Synthesize() types.SourceSynthesis {
-	return types.SourceSynthesis{
-		Construct: types.Construct{
+func (s *Source) Synthesize() internal.SourceSynthesis {
+	return internal.SourceSynthesis{
+		Construct: internal.Construct{
 			ID:   s.id,
 			Type: "Source:Stdio",
 			Params: map[string]any{

@@ -12,8 +12,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/rpc"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/testrunpb"
 )
@@ -38,7 +38,7 @@ type TestRun struct {
 	commands [][]byte
 	job      *Job
 	err      error
-	handler  *types.SynthesizedHandler
+	handler  *internal.SynthesizedHandler
 }
 
 func (t *TestRun) AddRecord(record []byte) {

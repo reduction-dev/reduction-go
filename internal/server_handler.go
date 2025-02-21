@@ -1,10 +1,8 @@
-package types
+package internal
 
 import (
 	"context"
 	"time"
-
-	"reduction.dev/reduction-go/internal"
 )
 
 // The ServerHandler represented the synthesized handler for a job that includes
@@ -24,12 +22,12 @@ type ServerHandler interface {
 	// Called when a new event arrives. The subject is a set of APIs scoped to
 	// the specific partition key being used. Because of this scoping, think of this
 	// as the subject (e.g. a User, a Product) in your domain.
-	OnEvent(ctx context.Context, subject *internal.Subject, event KeyedEvent) error
+	OnEvent(ctx context.Context, subject *Subject, event KeyedEvent) error
 
 	// A previously set timer expires. This is an asynchronous action where the
 	// timer fires at the specified time AT THE EARLIEST. That means that events
 	// after the timer's timestamp have likely already arrived.
-	OnTimerExpired(ctx context.Context, subject *internal.Subject, timer time.Time) error
+	OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error
 }
 
 type UnimplementedHandler struct{}
@@ -38,11 +36,11 @@ func (u UnimplementedHandler) KeyEvent(ctx context.Context, rawEvent []byte) (ma
 	panic("unimplemented")
 }
 
-func (u UnimplementedHandler) OnEvent(ctx context.Context, subject *internal.Subject, event KeyedEvent) error {
+func (u UnimplementedHandler) OnEvent(ctx context.Context, subject *Subject, event KeyedEvent) error {
 	panic("unimplemented")
 }
 
-func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *internal.Subject, timer time.Time) error {
+func (u UnimplementedHandler) OnTimerExpired(ctx context.Context, subject *Subject, timer time.Time) error {
 	panic("unimplemented")
 }
 

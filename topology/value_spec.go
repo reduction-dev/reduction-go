@@ -3,14 +3,13 @@ package topology
 import (
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/rxn"
 )
 
 func NewValueSpec[T any](op *Operator, id string, codec rxn.ValueCodec[T]) rxn.ValueSpec[T] {
 	ss := states.StateSpec[states.ValueState[T]]{
 		ID:    id,
-		Query: types.QueryTypeGet,
+		Query: internal.QueryTypeGet,
 		Load: func(stateEntries []internal.StateEntry) (*states.ValueState[T], error) {
 			internalState := states.NewValueState(id, codec)
 			err := internalState.Load(stateEntries)

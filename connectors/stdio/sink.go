@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/topology"
 )
 
@@ -20,9 +19,9 @@ func NewSink(job *topology.Job, id string) *Sink {
 	return sink
 }
 
-func (s *Sink) Synthesize() types.SinkSynthesis {
-	return types.SinkSynthesis{
-		Construct: types.Construct{
+func (s *Sink) Synthesize() internal.SinkSynthesis {
+	return internal.SinkSynthesis{
+		Construct: internal.Construct{
 			ID:   s.ID,
 			Type: "Sink:Stdio",
 			Params: map[string]any{

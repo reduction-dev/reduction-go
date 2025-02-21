@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/topology"
 )
 
@@ -37,9 +36,9 @@ func NewSink(job *topology.Job, id string, params *SinkParams) *Sink {
 	return sink
 }
 
-func (s *Sink) Synthesize() types.SinkSynthesis {
-	return types.SinkSynthesis{
-		Construct: types.Construct{
+func (s *Sink) Synthesize() internal.SinkSynthesis {
+	return internal.SinkSynthesis{
+		Construct: internal.Construct{
 			ID:   s.id,
 			Type: "Sink:HTTPAPI",
 			Params: map[string]any{
@@ -59,7 +58,7 @@ func (s *Sink) Collect(ctx context.Context, value *SinkRecord) {
 	subject.AddSinkRequest(s.id, payload)
 }
 
-var _ types.SinkRuntime[*SinkRecord] = (*Sink)(nil)
+var _ internal.SinkRuntime[*SinkRecord] = (*Sink)(nil)
 
 // Source Buildtime Config
 
@@ -67,14 +66,14 @@ type Source struct {
 	id        string
 	addr      string
 	topics    []string
-	keyEvent  func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
-	operators []*types.Operator
+	keyEvent  func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
+	operators []*internal.Operator
 }
 
 type SourceParams struct {
 	Addr     string
 	Topics   []string
-	KeyEvent func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
+	KeyEvent func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 }
 
 func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
@@ -88,13 +87,13 @@ func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	return source
 }
 
-func (s *Source) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *internal.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *Source) Synthesize() types.SourceSynthesis {
-	return types.SourceSynthesis{
-		Construct: types.Construct{
+func (s *Source) Synthesize() internal.SourceSynthesis {
+	return internal.SourceSynthesis{
+		Construct: internal.Construct{
 			ID:   s.id,
 			Type: "Source:HTTPAPI",
 			Params: map[string]any{

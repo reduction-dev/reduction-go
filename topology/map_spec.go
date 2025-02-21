@@ -3,7 +3,6 @@ package topology
 import (
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/states"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/rxn"
 )
 
@@ -14,7 +13,7 @@ import (
 func NewMapSpec[K comparable, T any](op *Operator, id string, codec states.MapStateCodec[K, T]) rxn.MapSpec[K, T] {
 	ss := states.StateSpec[states.MapState[K, T]]{
 		ID:    id,
-		Query: types.QueryTypeScan,
+		Query: internal.QueryTypeScan,
 		Load: func(stateEntries []internal.StateEntry) (*states.MapState[K, T], error) {
 			internalState := states.NewMapState(id, codec)
 			err := internalState.Load(stateEntries)

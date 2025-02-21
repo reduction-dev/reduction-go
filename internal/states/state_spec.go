@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 )
 
 type StateSpec[T any] struct {
 	ID        string
-	Query     types.QueryType
+	Query     internal.QueryType
 	Load      func([]internal.StateEntry) (*T, error)
 	Mutations func(*T) ([]internal.StateMutation, error)
 }

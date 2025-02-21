@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-go/rxn"
 )
 
-type Operator = types.Operator
+type Operator = internal.Operator
 
 type OperatorParams struct {
 	Parallelism int
@@ -19,7 +18,7 @@ type OperatorParams struct {
 type HandlerFactory = func(op *Operator) rxn.OperatorHandler
 
 func NewOperator(job *Job, id string, params *OperatorParams) *Operator {
-	operator := types.NewOperator(id)
+	operator := internal.NewOperator(id)
 	operator.Handler = internalHandler{params.Handler(operator)}
 
 	return operator
@@ -29,7 +28,7 @@ type internalHandler struct {
 	handler rxn.OperatorHandler
 }
 
-func (a internalHandler) OnEvent(ctx context.Context, internalSubject *internal.Subject, event types.KeyedEvent) error {
+func (a internalHandler) OnEvent(ctx context.Context, internalSubject *internal.Subject, event internal.KeyedEvent) error {
 	return a.handler.OnEvent(ctx, rxn.Subject(internalSubject), event)
 }
 

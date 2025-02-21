@@ -1,4 +1,4 @@
-package types
+package internal
 
 type OperatorParams struct {
 	Handler OperatorHandler

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 )
 
 // OperatorHandler defines the two methods operators implement to handle events
@@ -24,7 +24,7 @@ type OperatorHandler interface {
 
 // KeyedEvent has a Key used for partitioning data and a timestamp used for
 // tracking time. It's value is arbitrary byte data.
-type KeyedEvent = types.KeyedEvent
+type KeyedEvent = internal.KeyedEvent
 
 // Sink is a generic interface for collecting values.
 type Sink[T any] interface {

@@ -6,17 +6,16 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 )
 
 // Receive connect requests and invoke the user's handler methods.
 type ConnectHandler struct {
-	rxnHandler types.ServerHandler
+	rxnHandler internal.ServerHandler
 }
 
-func NewConnectHandler(handler types.ServerHandler) *ConnectHandler {
+func NewConnectHandler(handler internal.ServerHandler) *ConnectHandler {
 	return &ConnectHandler{handler}
 }
 
@@ -51,7 +50,7 @@ func (r *ConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Req
 		case *handlerpb.Event_KeyedEvent:
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnEvent(ctx, subject, types.KeyedEvent{
+			if err := r.rxnHandler.OnEvent(ctx, subject, internal.KeyedEvent{
 				Key:       typedEvent.KeyedEvent.Key,
 				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
 				Value:     typedEvent.KeyedEvent.Value,

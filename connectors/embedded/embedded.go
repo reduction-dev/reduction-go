@@ -3,7 +3,7 @@ package embedded
 import (
 	"context"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
 )
 
@@ -12,15 +12,15 @@ type Source struct {
 	splitCount int
 	batchSize  int
 	generator  string
-	keyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
-	operators  []*types.Operator
+	keyEvent   func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
+	operators  []*internal.Operator
 }
 
 type SourceParams struct {
 	SplitCount int
 	BatchSize  int
 	Generator  string
-	KeyEvent   func(ctx context.Context, record []byte) ([]types.KeyedEvent, error)
+	KeyEvent   func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 }
 
 func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
@@ -35,13 +35,13 @@ func NewSource(job *topology.Job, id string, params *SourceParams) *Source {
 	return source
 }
 
-func (s *Source) Connect(operator *types.Operator) {
+func (s *Source) Connect(operator *internal.Operator) {
 	s.operators = append(s.operators, operator)
 }
 
-func (s *Source) Synthesize() types.SourceSynthesis {
-	return types.SourceSynthesis{
-		Construct: types.Construct{
+func (s *Source) Synthesize() internal.SourceSynthesis {
+	return internal.SourceSynthesis{
+		Construct: internal.Construct{
 			ID:   s.id,
 			Type: "Source:Embedded",
 			Params: map[string]any{
@@ -55,4 +55,4 @@ func (s *Source) Synthesize() types.SourceSynthesis {
 	}
 }
 
-var _ types.Source = (*Source)(nil)
+var _ internal.Source = (*Source)(nil)

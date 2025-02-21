@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/rxnsvr"
 )
 
@@ -18,24 +18,24 @@ type Job struct {
 	WorkingStorageLocation   string
 	SavepointStorageLocation string
 
-	sources []types.Source
-	sinks   []types.SinkSynthesizer
+	sources []internal.Source
+	sinks   []internal.SinkSynthesizer
 }
 
 // registerSource adds a source to the job. Called via InternalAccess by
 // connectors.
-func (j *Job) registerSource(source types.Source) {
+func (j *Job) registerSource(source internal.Source) {
 	j.sources = append(j.sources, source)
 }
 
 // registerSink adds a sink to the job. Called via InternalAccess by
 // connectors.
-func (j *Job) registerSink(sink types.SinkSynthesizer) {
+func (j *Job) registerSink(sink internal.SinkSynthesizer) {
 	j.sinks = append(j.sinks, sink)
 }
 
 type jobSynthesis struct {
-	Handler *types.SynthesizedHandler
+	Handler *internal.SynthesizedHandler
 	Config  interface{ Marshal() []byte }
 }
 
@@ -48,7 +48,7 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 		return nil, fmt.Errorf("Reduction currently supports only one source per job but has %d configured", len(j.sources))
 	}
 
-	sourceConstructs := make(map[string]types.Construct, len(j.sources))
+	sourceConstructs := make(map[string]internal.Construct, len(j.sources))
 	sourceIDs := make([]string, len(j.sources))
 	for i, s := range j.sources {
 		synth := s.Synthesize()
@@ -56,7 +56,7 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 		sourceIDs[i] = synth.Construct.ID
 	}
 
-	sinkConstructs := make(map[string]types.Construct, len(j.sinks))
+	sinkConstructs := make(map[string]internal.Construct, len(j.sinks))
 	sinkIDs := make([]string, len(j.sinks))
 	for i, s := range j.sinks {
 		synth := s.Synthesize()
@@ -68,7 +68,7 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 	doc := &document{
 		Sources: sourceConstructs,
 		Sinks:   sinkConstructs,
-		Job: types.Construct{
+		Job: internal.Construct{
 			Params: map[string]any{
 				"WorkerCount":              j.WorkerCount,
 				"KeyGroupCount":            j.KeyGroupCount,
@@ -90,7 +90,7 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 	}
 
 	return &jobSynthesis{
-		Handler: &types.SynthesizedHandler{
+		Handler: &internal.SynthesizedHandler{
 			KeyEventFunc:    sourceSynth.KeyEventFunc,
 			OperatorHandler: sourceSynth.Operators[0].Synthesize().Handler,
 		},
@@ -100,9 +100,9 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 
 // A representation of the json document to produce when marshalling.
 type document struct {
-	Job     types.Construct
-	Sources map[string]types.Construct
-	Sinks   map[string]types.Construct
+	Job     internal.Construct
+	Sources map[string]internal.Construct
+	Sinks   map[string]internal.Construct
 }
 
 func (d *document) Marshal() []byte {

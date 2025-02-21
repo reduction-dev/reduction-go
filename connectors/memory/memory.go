@@ -3,7 +3,7 @@ package memory
 import (
 	"context"
 
-	"reduction.dev/reduction-go/internal/types"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
 )
 
@@ -21,8 +21,8 @@ func NewSink[T any](job *topology.Job, id string) *Sink[T] {
 	return sink
 }
 
-func (s *Sink[T]) Synthesize() types.SinkSynthesis {
-	return types.SinkSynthesis{}
+func (s *Sink[T]) Synthesize() internal.SinkSynthesis {
+	return internal.SinkSynthesis{}
 }
 
 func (s *Sink[T]) Collect(ctx context.Context, event T) {

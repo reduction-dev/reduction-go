@@ -9,19 +9,18 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/testrunpb"
 )
 
 // Receive messages over a unix pipe and invoke the user's handler methods.
 type PipeHandler struct {
-	rxnHandler types.ServerHandler
+	rxnHandler internal.ServerHandler
 	stdin      io.Writer
 	stdout     io.Reader
 }
 
-func NewPipeHandler(handler types.ServerHandler, stdin io.Writer, stdout io.Reader) *PipeHandler {
+func NewPipeHandler(handler internal.ServerHandler, stdin io.Writer, stdout io.Reader) *PipeHandler {
 	return &PipeHandler{
 		rxnHandler: handler,
 		stdin:      stdin,
@@ -128,7 +127,7 @@ func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerp
 		case *handlerpb.Event_KeyedEvent:
 			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
 			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnEvent(ctx, subject, types.KeyedEvent{
+			if err := r.rxnHandler.OnEvent(ctx, subject, internal.KeyedEvent{
 				Key:       typedEvent.KeyedEvent.Key,
 				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
 				Value:     typedEvent.KeyedEvent.Value,

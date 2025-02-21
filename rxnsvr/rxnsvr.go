@@ -13,8 +13,8 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
+	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/rpc"
-	"reduction.dev/reduction-go/internal/types"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
 )
 
@@ -33,7 +33,7 @@ func WithListener(l net.Listener) func(server *Server) {
 }
 
 // Create a new server instance
-func New(handler types.ServerHandler, opts ...Option) *Server {
+func New(handler internal.ServerHandler, opts ...Option) *Server {
 	mux := http.NewServeMux()
 
 	// Add connect service to mux
