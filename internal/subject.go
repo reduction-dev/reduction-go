@@ -52,14 +52,18 @@ func (s *Subject) StoreLoadedState(id string, state any) {
 
 type contextKey string
 
-var SubjectContextKey = contextKey("subject")
+var subjectContextKey = contextKey("subject")
 
 func SubjectFromContext(ctx context.Context) *Subject {
-	subject, ok := ctx.Value(SubjectContextKey).(*Subject)
+	subject, ok := ctx.Value(subjectContextKey).(*Subject)
 	if !ok {
-		panic(fmt.Sprintf("missing Subject in context, must pass rxn context to handler, %T", ctx.Value(SubjectContextKey)))
+		panic(fmt.Sprintf("missing Subject in context, must pass rxn context to handler, %T", ctx.Value(subjectContextKey)))
 	}
 	return subject
+}
+
+func ContextWithSubject(ctx context.Context, subject *Subject) context.Context {
+	return context.WithValue(ctx, subjectContextKey, subject)
 }
 
 func CastToSubject(subject any) *Subject {
