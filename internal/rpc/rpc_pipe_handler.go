@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/testrunpb"
@@ -98,50 +97,17 @@ func (r *PipeHandler) ProcessMessages(ctx context.Context) error {
 }
 
 func (r *PipeHandler) handleKeyEventBatch(ctx context.Context, req *handlerpb.KeyEventBatchRequest) error {
-	results := make([]*handlerpb.KeyEventResult, len(req.Values))
-	for valueIdx, value := range req.Values {
-		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
-		if err != nil {
-			return err
-		}
-		pbKeyedEvents := make([]*handlerpb.KeyedEvent, len(keyedEvents))
-		for eventIdx, event := range keyedEvents {
-			pbKeyedEvents[eventIdx] = &handlerpb.KeyedEvent{
-				Key:       event.Key,
-				Value:     event.Value,
-				Timestamp: timestamppb.New(event.Timestamp),
-			}
-		}
-		results[valueIdx] = &handlerpb.KeyEventResult{Events: pbKeyedEvents}
+	resp, err := r.rxnHandler.KeyEventBatch(ctx, req)
+	if err != nil {
+		return err
 	}
-
-	resp := &handlerpb.KeyEventBatchResponse{Results: results}
 	return r.writeResponse(resp)
 }
 
 func (r *PipeHandler) handleProcessEventBatch(ctx context.Context, req *handlerpb.ProcessEventBatchRequest) error {
-	subjectBatch := internal.NewLazySubjectBatch(req.KeyStates, req.Watermark.AsTime())
-
-	for _, event := range req.Events {
-		switch typedEvent := event.Event.(type) {
-		case *handlerpb.Event_KeyedEvent:
-			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
-			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnEvent(ctx, subject, internal.KeyedEvent{
-				Key:       typedEvent.KeyedEvent.Key,
-				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
-				Value:     typedEvent.KeyedEvent.Value,
-			}); err != nil {
-				return err
-			}
-		case *handlerpb.Event_TimerExpired:
-			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
-			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
-				return err
-			}
-		}
+	resp, err := r.rxnHandler.ProcessEventBatch(ctx, req)
+	if err != nil {
+		return err
 	}
-
-	return r.writeResponse(subjectBatch.Response())
+	return r.writeResponse(resp)
 }

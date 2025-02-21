@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-protocol/handlerpb"
 	"reduction.dev/reduction-protocol/handlerpb/handlerpbconnect"
@@ -20,53 +19,19 @@ func NewConnectHandler(handler *internal.SynthesizedHandler) *ConnectHandler {
 }
 
 func (r *ConnectHandler) KeyEventBatch(ctx context.Context, req *connect.Request[handlerpb.KeyEventBatchRequest]) (*connect.Response[handlerpb.KeyEventBatchResponse], error) {
-	results := make([]*handlerpb.KeyEventResult, 0, len(req.Msg.Values))
-	for _, value := range req.Msg.Values {
-		keyedEvents, err := r.rxnHandler.KeyEvent(ctx, value)
-		if err != nil {
-			return nil, handleError(err)
-		}
-		pbKeyedEvents := make([]*handlerpb.KeyedEvent, len(keyedEvents))
-		for i, event := range keyedEvents {
-			pbKeyedEvents[i] = &handlerpb.KeyedEvent{
-				Key:       event.Key,
-				Timestamp: timestamppb.New(event.Timestamp),
-				Value:     event.Value,
-			}
-		}
-		results = append(results, &handlerpb.KeyEventResult{Events: pbKeyedEvents})
+	resp, err := r.rxnHandler.KeyEventBatch(ctx, req.Msg)
+	if err != nil {
+		return nil, handleError(err)
 	}
-
-	return connect.NewResponse(&handlerpb.KeyEventBatchResponse{
-		Results: results,
-	}), nil
+	return connect.NewResponse(resp), nil
 }
 
 func (r *ConnectHandler) ProcessEventBatch(ctx context.Context, req *connect.Request[handlerpb.ProcessEventBatchRequest]) (*connect.Response[handlerpb.ProcessEventBatchResponse], error) {
-	subjectBatch := internal.NewLazySubjectBatch(req.Msg.KeyStates, req.Msg.Watermark.AsTime())
-
-	for _, event := range req.Msg.Events {
-		switch typedEvent := event.Event.(type) {
-		case *handlerpb.Event_KeyedEvent:
-			subject := subjectBatch.SubjectFor(typedEvent.KeyedEvent.Key, typedEvent.KeyedEvent.Timestamp.AsTime())
-			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnEvent(ctx, subject, internal.KeyedEvent{
-				Key:       typedEvent.KeyedEvent.Key,
-				Timestamp: typedEvent.KeyedEvent.Timestamp.AsTime(),
-				Value:     typedEvent.KeyedEvent.Value,
-			}); err != nil {
-				return nil, handleError(err)
-			}
-		case *handlerpb.Event_TimerExpired:
-			subject := subjectBatch.SubjectFor(typedEvent.TimerExpired.Key, typedEvent.TimerExpired.Timestamp.AsTime())
-			ctx = internal.ContextWithSubject(ctx, subject)
-			if err := r.rxnHandler.OnTimerExpired(ctx, subject, typedEvent.TimerExpired.Timestamp.AsTime()); err != nil {
-				return nil, handleError(err)
-			}
-		}
+	resp, err := r.rxnHandler.ProcessEventBatch(ctx, req.Msg)
+	if err != nil {
+		return nil, handleError(err)
 	}
 
-	resp := subjectBatch.Response()
 	return connect.NewResponse(resp), nil
 }
 
