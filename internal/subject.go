@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -50,6 +51,22 @@ func (s *Subject) StoreLoadedState(id string, state any) {
 type contextKey string
 
 var SubjectContextKey = contextKey("subject")
+
+func SubjectFromContext(ctx context.Context) *Subject {
+	subject, ok := ctx.Value(SubjectContextKey).(*Subject)
+	if !ok {
+		panic(fmt.Sprintf("missing Subject in context, must pass rxn context to handler, %T", ctx.Value(SubjectContextKey)))
+	}
+	return subject
+}
+
+func CastToSubject(subject any) *Subject {
+	s, ok := subject.(*Subject)
+	if !ok {
+		panic(fmt.Sprintf("invalid subject type: %T", subject))
+	}
+	return s
+}
 
 type StateEntry struct {
 	Key   []byte

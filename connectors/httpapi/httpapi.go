@@ -7,7 +7,6 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/internal/types"
-	"reduction.dev/reduction-go/rxn"
 	"reduction.dev/reduction-go/topology"
 )
 
@@ -51,10 +50,7 @@ func (s *Sink) Synthesize() types.SinkSynthesis {
 }
 
 func (s *Sink) Collect(ctx context.Context, value *SinkRecord) {
-	subject, ok := ctx.Value(internal.SubjectContextKey).(*rxn.Subject)
-	if !ok {
-		panic("must pass rxn context to sink.Collect")
-	}
+	subject := internal.SubjectFromContext(ctx)
 
 	payload, err := json.Marshal(value)
 	if err != nil {

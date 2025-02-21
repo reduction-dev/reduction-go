@@ -35,6 +35,6 @@ type mapSpec[K comparable, T any] struct {
 	spec states.StateSpec[states.MapState[K, T]]
 }
 
-func (m *mapSpec[K, T]) StateFor(subject *internal.Subject) rxn.MapState[K, T] {
-	return m.spec.StateFor(subject)
+func (m *mapSpec[K, T]) StateFor(subject rxn.Subject) rxn.MapState[K, T] {
+	return m.spec.StateFor(internal.CastToSubject(subject))
 }

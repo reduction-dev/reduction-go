@@ -10,7 +10,7 @@ type ValueCodec[T any] interface {
 }
 
 type ValueSpec[T any] interface {
-	StateFor(subject *internal.Subject) ValueState[T]
+	StateFor(subject Subject) ValueState[T]
 }
 
 type ValueState[T any] interface {

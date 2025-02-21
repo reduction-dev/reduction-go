@@ -32,6 +32,6 @@ type valueSpec[T any] struct {
 	spec states.StateSpec[states.ValueState[T]]
 }
 
-func (v *valueSpec[T]) StateFor(subject *internal.Subject) rxn.ValueState[T] {
-	return v.spec.StateFor(subject)
+func (v *valueSpec[T]) StateFor(subject rxn.Subject) rxn.ValueState[T] {
+	return v.spec.StateFor(internal.CastToSubject(subject))
 }
