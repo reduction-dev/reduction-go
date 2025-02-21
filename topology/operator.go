@@ -19,19 +19,20 @@ type HandlerFactory = func(op *Operator) rxn.OperatorHandler
 
 func NewOperator(job *Job, id string, params *OperatorParams) *Operator {
 	operator := internal.NewOperator(id)
-	operator.Handler = internalHandler{params.Handler(operator)}
+	operator.Handler = internalSubjectHandler{params.Handler(operator)}
 
 	return operator
 }
 
-type internalHandler struct {
+// Converts the internal subject to the public subject interface
+type internalSubjectHandler struct {
 	handler rxn.OperatorHandler
 }
 
-func (a internalHandler) OnEvent(ctx context.Context, internalSubject *internal.Subject, event internal.KeyedEvent) error {
+func (a internalSubjectHandler) OnEvent(ctx context.Context, internalSubject *internal.Subject, event internal.KeyedEvent) error {
 	return a.handler.OnEvent(ctx, rxn.Subject(internalSubject), event)
 }
 
-func (a internalHandler) OnTimerExpired(ctx context.Context, internalSubject *internal.Subject, ts time.Time) error {
+func (a internalSubjectHandler) OnTimerExpired(ctx context.Context, internalSubject *internal.Subject, ts time.Time) error {
 	return a.handler.OnTimerExpired(ctx, rxn.Subject(internalSubject), ts)
 }
