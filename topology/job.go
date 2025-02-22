@@ -2,14 +2,15 @@
 package topology
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"os"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/rxnsvr"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 )
 
 type Job struct {
@@ -48,36 +49,34 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 		return nil, fmt.Errorf("Reduction currently supports only one source per job but has %d configured", len(j.sources))
 	}
 
-	sourceConstructs := make(map[string]internal.Construct, len(j.sources))
-	sourceIDs := make([]string, len(j.sources))
+	// Create protobuf config
+	config := &jobconfigpb.JobConfig{
+		Job: &jobconfigpb.Job{
+			WorkerCount:              int32(j.WorkerCount),
+			KeyGroupCount:            int32(j.KeyGroupCount),
+			WorkingStorageLocation:   j.WorkingStorageLocation,
+			SavepointStorageLocation: j.SavepointStorageLocation,
+		},
+		Sources: make([]*jobconfigpb.Source, len(j.sources)),
+		Sinks:   make([]*jobconfigpb.Sink, len(j.sinks)),
+	}
+
+	// Convert sources and sinks to protobuf format
+	// Note: This will need to be updated when the connectors are updated to provide protobuf configs
 	for i, s := range j.sources {
 		synth := s.Synthesize()
-		sourceConstructs[synth.Construct.ID] = synth.Construct
-		sourceIDs[i] = synth.Construct.ID
+		config.Sources[i] = &jobconfigpb.Source{
+			Id: synth.Construct.ID,
+			// Config will be set by the source implementations
+		}
 	}
 
-	sinkConstructs := make(map[string]internal.Construct, len(j.sinks))
-	sinkIDs := make([]string, len(j.sinks))
 	for i, s := range j.sinks {
 		synth := s.Synthesize()
-		sinkConstructs[synth.Construct.ID] = synth.Construct
-		sinkIDs[i] = synth.Construct.ID
-	}
-
-	// Create doc of constructs
-	doc := &document{
-		Sources: sourceConstructs,
-		Sinks:   sinkConstructs,
-		Job: internal.Construct{
-			Params: map[string]any{
-				"WorkerCount":              j.WorkerCount,
-				"KeyGroupCount":            j.KeyGroupCount,
-				"WorkingStorageLocation":   j.WorkingStorageLocation,
-				"SavepointStorageLocation": j.SavepointStorageLocation,
-				"SourceIDs":                sourceIDs,
-				"SinkIDs":                  sinkIDs,
-			},
-		},
+		config.Sinks[i] = &jobconfigpb.Sink{
+			Id: synth.Construct.ID,
+			// Config will be set by the sink implementations
+		}
 	}
 
 	sourceSynth := j.sources[0].Synthesize()
@@ -94,21 +93,22 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 			KeyEventFunc:    sourceSynth.KeyEventFunc,
 			OperatorHandler: sourceSynth.Operators[0].Synthesize().Handler,
 		},
-		Config: doc,
+		Config: protoConfig{config},
 	}, nil
 }
 
-// A representation of the json document to produce when marshalling.
-type document struct {
-	Job     internal.Construct
-	Sources map[string]internal.Construct
-	Sinks   map[string]internal.Construct
+// protoConfig wraps jobconfigpb.JobConfig to provide Marshal method
+type protoConfig struct {
+	*jobconfigpb.JobConfig
 }
 
-func (d *document) Marshal() []byte {
-	data, err := json.MarshalIndent(d, "", "  ")
+func (p protoConfig) Marshal() []byte {
+	marshaler := protojson.MarshalOptions{
+		Indent: "  ",
+	}
+	data, err := marshaler.Marshal(p.JobConfig)
 	if err != nil {
-		panic(fmt.Sprintf("BUG: could not marhsal synthesized job: %v", err))
+		panic(fmt.Sprintf("BUG: could not marshal synthesized job: %v", err))
 	}
 	return data
 }
