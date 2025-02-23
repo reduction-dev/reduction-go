@@ -5,21 +5,29 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 )
 
 type Source struct {
 	id         string
 	splitCount int
 	batchSize  int
-	generator  string
+	generator  generatorType
 	keyEvent   func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 	operators  []*internal.Operator
 }
 
+type generatorType = jobconfigpb.EmbeddedSource_GeneratorType
+
+const (
+	GeneratorUnspecified generatorType = jobconfigpb.EmbeddedSource_GENERATOR_TYPE_UNSPECIFIED
+	GeneratorSequence    generatorType = jobconfigpb.EmbeddedSource_GENERATOR_TYPE_SEQUENCE
+)
+
 type SourceParams struct {
 	SplitCount int
 	BatchSize  int
-	Generator  string
+	Generator  generatorType
 	KeyEvent   func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 }
 
@@ -52,6 +60,16 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
+		Config: &jobconfigpb.Source{
+			Id: s.id,
+			Config: &jobconfigpb.Source_Embedded{
+				Embedded: &jobconfigpb.EmbeddedSource{
+					SplitCount: int32(s.splitCount),
+					BatchSize:  int32(s.batchSize),
+					Generator:  s.generator,
+				},
+			},
+		},
 	}
 }
 
