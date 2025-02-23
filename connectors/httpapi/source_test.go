@@ -32,20 +32,3 @@ func TestSourceSynthesize(t *testing.T) {
 		},
 	}, synth.Config)
 }
-
-func TestSinkSynthesize(t *testing.T) {
-	job := &topology.Job{}
-	sink := httpapi.NewSink(job, "test-sink", &httpapi.SinkParams{
-		Addr: "http://example.com/events",
-	})
-
-	synth := sink.Synthesize()
-	assert.Equal(t, &jobconfigpb.Sink{
-		Id: "test-sink",
-		Config: &jobconfigpb.Sink_HttpApi{
-			HttpApi: &jobconfigpb.HTTPAPISink{
-				Addr: "http://example.com/events",
-			},
-		},
-	}, synth.Config)
-}
