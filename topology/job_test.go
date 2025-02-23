@@ -16,7 +16,6 @@ import (
 )
 
 func TestJobSynthesizeConfig(t *testing.T) {
-	// Create a simple job with stdio source
 	job := &topology.Job{
 		WorkerCount:              1,
 		KeyGroupCount:            2,
@@ -57,7 +56,6 @@ func TestJobSynthesizeConfig(t *testing.T) {
 	err = protojson.Unmarshal(jsonBytes, &jobConfig)
 	require.NoError(t, err, "failed to parse JSON into JobConfig")
 
-	// Create expected job config
 	want := &jobconfigpb.JobConfig{
 		Job: &jobconfigpb.Job{
 			WorkerCount:              1,
@@ -75,9 +73,8 @@ func TestJobSynthesizeConfig(t *testing.T) {
 				},
 			},
 		}},
-		Sinks: []*jobconfigpb.Sink{}, // Empty for this test
+		Sinks: nil,
 	}
 
-	// Assert equality using EqualExportedValues for proper protobuf comparison
 	assert.EqualExportedValues(t, want, &jobConfig)
 }

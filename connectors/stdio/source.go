@@ -5,6 +5,7 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 )
 
 // Source reads events from stdin
@@ -52,5 +53,19 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
+		Config:       s.Config(),
+	}
+}
+
+func (s *Source) Config() *jobconfigpb.Source {
+	return &jobconfigpb.Source{
+		Id: s.id,
+		Config: &jobconfigpb.Source_Stdio{
+			Stdio: &jobconfigpb.StdioSource{
+				Framing: &jobconfigpb.Framing{
+					Delimiter: s.framing.Delimiter,
+				},
+			},
+		},
 	}
 }

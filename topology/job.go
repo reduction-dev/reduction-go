@@ -62,14 +62,8 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 	}
 
 	// Convert sources and sinks to protobuf format
-	// Note: This will need to be updated when the connectors are updated to provide protobuf configs
-	for i, s := range j.sources {
-		synth := s.Synthesize()
-		config.Sources[i] = &jobconfigpb.Source{
-			Id: synth.Construct.ID,
-			// Config will be set by the source implementations
-		}
-	}
+	sourceSynth := j.sources[0].Synthesize()
+	config.Sources[0] = sourceSynth.Config
 
 	for i, s := range j.sinks {
 		synth := s.Synthesize()
@@ -79,7 +73,6 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 		}
 	}
 
-	sourceSynth := j.sources[0].Synthesize()
 	if len(sourceSynth.Operators) == 0 {
 		return nil, fmt.Errorf("source is missing operator")
 	}
