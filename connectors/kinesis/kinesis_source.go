@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 	"reduction.dev/reduction-protocol/kinesispb"
 )
 
@@ -66,6 +67,15 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 			return s.keyEvent(ctx, kinesisRecord)
 		},
 		Operators: s.operators,
+		Config: &jobconfigpb.Source{
+			Id: s.id,
+			Config: &jobconfigpb.Source_Kinesis{
+				Kinesis: &jobconfigpb.KinesisSource{
+					StreamArn: s.streamARN,
+					Endpoint:  s.endpoint,
+				},
+			},
+		},
 	}
 }
 

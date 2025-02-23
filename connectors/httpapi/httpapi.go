@@ -3,10 +3,11 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 )
 
 // Sink Buildtime Config
@@ -45,6 +46,14 @@ func (s *Sink) Synthesize() internal.SinkSynthesis {
 				"Addr": s.addr,
 			},
 		},
+		Config: &jobconfigpb.Sink{
+			Id: s.id,
+			Config: &jobconfigpb.Sink_HttpApi{
+				HttpApi: &jobconfigpb.HTTPAPISink{
+					Addr: s.addr,
+				},
+			},
+		},
 	}
 }
 
@@ -53,7 +62,7 @@ func (s *Sink) Collect(ctx context.Context, value *SinkRecord) {
 
 	payload, err := json.Marshal(value)
 	if err != nil {
-		log.Fatal("httpapi Sink json.Marshal", "err", err)
+		panic(fmt.Sprintf("httpapi Sink json.Marshal: %v", err))
 	}
 	subject.AddSinkRequest(s.id, payload)
 }
@@ -101,5 +110,14 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
+		Config: &jobconfigpb.Source{
+			Id: s.id,
+			Config: &jobconfigpb.Source_HttpApi{
+				HttpApi: &jobconfigpb.HTTPAPISource{
+					Addr:   s.addr,
+					Topics: s.topics,
+				},
+			},
+		},
 	}
 }
