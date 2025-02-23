@@ -67,10 +67,7 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 
 	for i, s := range j.sinks {
 		synth := s.Synthesize()
-		config.Sinks[i] = &jobconfigpb.Sink{
-			Id: synth.Construct.ID,
-			// Config will be set by the sink implementations
-		}
+		config.Sinks[i] = synth.Config
 	}
 
 	if len(sourceSynth.Operators) == 0 {

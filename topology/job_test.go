@@ -23,6 +23,7 @@ func TestJobSynthesizeConfig(t *testing.T) {
 		SavepointStorageLocation: "/tmp/save",
 	}
 
+	sink := stdio.NewSink(job, "test-sink")
 	source := stdio.NewSource(job, "test-source", &stdio.SourceParams{
 		KeyEvent: func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error) {
 			return []internal.KeyedEvent{{
@@ -42,6 +43,7 @@ func TestJobSynthesizeConfig(t *testing.T) {
 		},
 	})
 	source.Connect(operator)
+	operator.Connect(sink)
 
 	// Synthesize the job
 	synth, err := job.Synthesize()
@@ -73,7 +75,12 @@ func TestJobSynthesizeConfig(t *testing.T) {
 				},
 			},
 		}},
-		Sinks: nil,
+		Sinks: []*jobconfigpb.Sink{{
+			Id: "test-sink",
+			Config: &jobconfigpb.Sink_Stdio{
+				Stdio: &jobconfigpb.StdioSink{},
+			},
+		}},
 	}
 
 	assert.EqualExportedValues(t, want, &jobConfig)

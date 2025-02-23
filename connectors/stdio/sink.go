@@ -5,6 +5,7 @@ import (
 
 	"reduction.dev/reduction-go/internal"
 	"reduction.dev/reduction-go/topology"
+	"reduction.dev/reduction-protocol/jobconfigpb"
 )
 
 type Sink struct {
@@ -26,6 +27,12 @@ func (s *Sink) Synthesize() internal.SinkSynthesis {
 			Type: "Sink:Stdio",
 			Params: map[string]any{
 				"ID": s.ID,
+			},
+		},
+		Config: &jobconfigpb.Sink{
+			Id: s.ID,
+			Config: &jobconfigpb.Sink_Stdio{
+				Stdio: &jobconfigpb.StdioSink{},
 			},
 		},
 	}
