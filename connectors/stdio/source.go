@@ -41,29 +41,15 @@ func (s *Source) Connect(operator *internal.Operator) {
 
 func (s *Source) Synthesize() internal.SourceSynthesis {
 	return internal.SourceSynthesis{
-		Construct: internal.Construct{
-			ID:   s.id,
-			Type: "Source:Stdio",
-			Params: map[string]any{
-				"ID": s.id,
-				"Framing": map[string]any{
-					"Delimiter": s.framing.Delimiter,
-				},
-			},
-		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
-		Config:       s.Config(),
-	}
-}
-
-func (s *Source) Config() *jobconfigpb.Source {
-	return &jobconfigpb.Source{
-		Id: s.id,
-		Config: &jobconfigpb.Source_Stdio{
-			Stdio: &jobconfigpb.StdioSource{
-				Framing: &jobconfigpb.Framing{
-					Delimiter: s.framing.Delimiter,
+		Config: &jobconfigpb.Source{
+			Id: s.id,
+			Config: &jobconfigpb.Source_Stdio{
+				Stdio: &jobconfigpb.StdioSource{
+					Framing: &jobconfigpb.Framing{
+						Delimiter: s.framing.Delimiter,
+					},
 				},
 			},
 		},

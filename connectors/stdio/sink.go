@@ -22,13 +22,6 @@ func NewSink(job *topology.Job, id string) *Sink {
 
 func (s *Sink) Synthesize() internal.SinkSynthesis {
 	return internal.SinkSynthesis{
-		Construct: internal.Construct{
-			ID:   s.ID,
-			Type: "Sink:Stdio",
-			Params: map[string]any{
-				"ID": s.ID,
-			},
-		},
 		Config: &jobconfigpb.Sink{
 			Id: s.ID,
 			Config: &jobconfigpb.Sink_Stdio{

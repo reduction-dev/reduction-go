@@ -49,15 +49,6 @@ func (s *Source) Connect(operator *internal.Operator) {
 
 func (s *Source) Synthesize() internal.SourceSynthesis {
 	return internal.SourceSynthesis{
-		Construct: internal.Construct{
-			ID:   s.id,
-			Type: "Source:Embedded",
-			Params: map[string]any{
-				"SplitCount": s.splitCount,
-				"BatchSize":  s.batchSize,
-				"Generator":  s.generator,
-			},
-		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
 		Config: &jobconfigpb.Source{

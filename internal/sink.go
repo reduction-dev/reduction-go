@@ -7,7 +7,5 @@ type SinkSynthesizer interface {
 }
 
 type SinkSynthesis struct {
-	// TODO: Remove Construct after pb migration
-	Construct Construct
-	Config    *jobconfigpb.Sink
+	Config *jobconfigpb.Sink
 }

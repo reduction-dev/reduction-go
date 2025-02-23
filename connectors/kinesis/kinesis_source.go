@@ -47,14 +47,6 @@ func (s *Source) Connect(operator *internal.Operator) {
 
 func (s *Source) Synthesize() internal.SourceSynthesis {
 	return internal.SourceSynthesis{
-		Construct: internal.Construct{
-			ID:   s.id,
-			Type: "Source:Kinesis",
-			Params: map[string]any{
-				"StreamARN": s.streamARN,
-				"Endpoint":  s.endpoint,
-			},
-		},
 		KeyEventFunc: func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error) {
 			var pbRecord kinesispb.Record
 			if err := proto.Unmarshal(record, &pbRecord); err != nil {

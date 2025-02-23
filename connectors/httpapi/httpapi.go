@@ -39,13 +39,6 @@ func NewSink(job *topology.Job, id string, params *SinkParams) *Sink {
 
 func (s *Sink) Synthesize() internal.SinkSynthesis {
 	return internal.SinkSynthesis{
-		Construct: internal.Construct{
-			ID:   s.id,
-			Type: "Sink:HTTPAPI",
-			Params: map[string]any{
-				"Addr": s.addr,
-			},
-		},
 		Config: &jobconfigpb.Sink{
 			Id: s.id,
 			Config: &jobconfigpb.Sink_HttpApi{
@@ -100,14 +93,6 @@ func (s *Source) Connect(operator *internal.Operator) {
 
 func (s *Source) Synthesize() internal.SourceSynthesis {
 	return internal.SourceSynthesis{
-		Construct: internal.Construct{
-			ID:   s.id,
-			Type: "Source:HTTPAPI",
-			Params: map[string]any{
-				"Addr":   s.addr,
-				"Topics": s.topics,
-			},
-		},
 		KeyEventFunc: s.keyEvent,
 		Operators:    s.operators,
 		Config: &jobconfigpb.Source{

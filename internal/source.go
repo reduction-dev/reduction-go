@@ -12,8 +12,6 @@ type Source interface {
 }
 
 type SourceSynthesis struct {
-	// TODO: Remove Construct after pb migration
-	Construct    Construct
 	KeyEventFunc func(ctx context.Context, record []byte) ([]KeyedEvent, error)
 	Operators    []*Operator
 	Config       *jobconfigpb.Source
