@@ -48,7 +48,11 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 			Config: &jobconfigpb.Source_Stdio{
 				Stdio: &jobconfigpb.StdioSource{
 					Framing: &jobconfigpb.Framing{
-						Delimiter: s.framing.Delimiter,
+						Scheme: &jobconfigpb.Framing_Delimited{
+							Delimited: &jobconfigpb.Framing_DelimitedScheme{
+								Delimiter: s.framing.Delimiter,
+							},
+						},
 					},
 				},
 			},

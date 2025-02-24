@@ -70,7 +70,11 @@ func TestJobSynthesizeConfig(t *testing.T) {
 			Config: &jobconfigpb.Source_Stdio{
 				Stdio: &jobconfigpb.StdioSource{
 					Framing: &jobconfigpb.Framing{
-						Delimiter: []byte("\n"),
+						Scheme: &jobconfigpb.Framing_Delimited{
+							Delimited: &jobconfigpb.Framing_DelimitedScheme{
+								Delimiter: []byte("\n"),
+							},
+						},
 					},
 				},
 			},
