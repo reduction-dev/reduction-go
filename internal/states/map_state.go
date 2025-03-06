@@ -10,7 +10,7 @@ type MapState[K comparable, V any] struct {
 	name     string
 	original map[K]V
 	updates  map[K]ValueUpdate[V]
-	codec    MapStateCodec[K, V]
+	codec    MapCodec[K, V]
 	size     int // tracks current number of items
 }
 
@@ -19,7 +19,7 @@ type ValueUpdate[V any] struct {
 	Value    V
 }
 
-type MapStateCodec[K comparable, V any] interface {
+type MapCodec[K comparable, V any] interface {
 	EncodeKey(key K) ([]byte, error)
 	DecodeKey(b []byte) (K, error)
 	EncodeValue(value V) ([]byte, error)
@@ -27,7 +27,7 @@ type MapStateCodec[K comparable, V any] interface {
 }
 
 // NewMapState creates a new MapState, applying any provided options.
-func NewMapState[K comparable, V any](name string, codec MapStateCodec[K, V]) *MapState[K, V] {
+func NewMapState[K comparable, V any](name string, codec MapCodec[K, V]) *MapState[K, V] {
 	return &MapState[K, V]{
 		name:     name,
 		original: make(map[K]V),

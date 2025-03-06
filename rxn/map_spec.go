@@ -18,4 +18,4 @@ type MapState[K comparable, V any] interface {
 	Size() int
 }
 
-type MapCodec[K comparable, T any] = states.MapStateCodec[K, T]
+type MapCodec[K comparable, T any] = states.MapCodec[K, T]

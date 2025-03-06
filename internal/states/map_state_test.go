@@ -111,22 +111,22 @@ func TestMapState_Size(t *testing.T) {
 }
 
 // A Codec for a map[string]string
-type MapStateCodec struct{}
+type MapCodec struct{}
 
-func (m MapStateCodec) EncodeKey(key string) ([]byte, error) {
+func (m MapCodec) EncodeKey(key string) ([]byte, error) {
 	return []byte(key), nil
 }
 
-func (m MapStateCodec) DecodeKey(data []byte) (string, error) {
+func (m MapCodec) DecodeKey(data []byte) (string, error) {
 	return string(data), nil
 }
 
-func (m MapStateCodec) EncodeValue(value string) ([]byte, error) {
+func (m MapCodec) EncodeValue(value string) ([]byte, error) {
 	return []byte(value), nil
 }
 
-func (m MapStateCodec) DecodeValue(data []byte) (string, error) {
+func (m MapCodec) DecodeValue(data []byte) (string, error) {
 	return string(data), nil
 }
 
-var codec states.MapStateCodec[string, string] = MapStateCodec{}
+var codec states.MapCodec[string, string] = MapCodec{}

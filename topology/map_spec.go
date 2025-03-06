@@ -10,7 +10,7 @@ import (
 // [topology.Operator]. The ID with the subject's key uniquely identifies the state
 // for a key to DKV queries. The codec defines how data is parsed and serialized
 // for network transport and storage.
-func NewMapSpec[K comparable, T any](op *Operator, id string, codec states.MapStateCodec[K, T]) rxn.MapSpec[K, T] {
+func NewMapSpec[K comparable, T any](op *Operator, id string, codec states.MapCodec[K, T]) rxn.MapSpec[K, T] {
 	ss := states.StateSpec[states.MapState[K, T]]{
 		ID:    id,
 		Query: internal.QueryTypeScan,
