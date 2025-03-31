@@ -14,10 +14,10 @@ import (
 )
 
 type Job struct {
-	WorkerCount              int
+	WorkerCount              ResolvableInt
 	KeyGroupCount            int
-	WorkingStorageLocation   string
-	SavepointStorageLocation string
+	WorkingStorageLocation   ResolvableString
+	SavepointStorageLocation ResolvableString
 
 	sources []internal.Source
 	sinks   []internal.SinkSynthesizer
@@ -52,10 +52,10 @@ func (j *Job) Synthesize() (*jobSynthesis, error) {
 	// Create protobuf config
 	config := &jobconfigpb.JobConfig{
 		Job: &jobconfigpb.Job{
-			WorkerCount:              int32(j.WorkerCount),
+			WorkerCount:              j.WorkerCount.Proto(),
 			KeyGroupCount:            int32(j.KeyGroupCount),
-			WorkingStorageLocation:   j.WorkingStorageLocation,
-			SavepointStorageLocation: j.SavepointStorageLocation,
+			WorkingStorageLocation:   j.WorkingStorageLocation.Proto(),
+			SavepointStorageLocation: j.SavepointStorageLocation.Proto(),
 		},
 		Sources: make([]*jobconfigpb.Source, len(j.sources)),
 		Sinks:   make([]*jobconfigpb.Sink, len(j.sinks)),

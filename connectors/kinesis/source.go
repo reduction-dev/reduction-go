@@ -13,8 +13,8 @@ import (
 
 type Source struct {
 	id        string
-	streamARN string
-	endpoint  string
+	streamARN topology.ResolvableString
+	endpoint  topology.ResolvableString
 	keyEvent  func(ctx context.Context, record *Record) ([]internal.KeyedEvent, error)
 	operators []*internal.Operator
 }
@@ -25,8 +25,8 @@ type Record struct {
 }
 
 type SourceParams struct {
-	StreamARN string
-	Endpoint  string
+	StreamARN topology.ResolvableString
+	Endpoint  topology.ResolvableString
 	KeyEvent  func(ctx context.Context, record *Record) ([]internal.KeyedEvent, error)
 }
 
@@ -63,8 +63,8 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 			Id: s.id,
 			Config: &jobconfigpb.Source_Kinesis{
 				Kinesis: &jobconfigpb.KinesisSource{
-					StreamArn: s.streamARN,
-					Endpoint:  s.endpoint,
+					StreamArn: s.streamARN.Proto(),
+					Endpoint:  s.endpoint.Proto(),
 				},
 			},
 		},

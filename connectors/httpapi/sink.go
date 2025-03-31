@@ -12,11 +12,11 @@ import (
 
 type Sink struct {
 	id   string
-	addr string
+	addr topology.ResolvableString
 }
 
 type SinkParams struct {
-	Addr string
+	Addr topology.ResolvableString
 }
 
 type SinkRecord struct {
@@ -41,7 +41,7 @@ func (s *Sink) Synthesize() internal.SinkSynthesis {
 			Id: s.id,
 			Config: &jobconfigpb.Sink_HttpApi{
 				HttpApi: &jobconfigpb.HTTPAPISink{
-					Addr: s.addr,
+					Addr: s.addr.Proto(),
 				},
 			},
 		},
