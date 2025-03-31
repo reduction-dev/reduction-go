@@ -14,7 +14,7 @@ import (
 func TestSourceSynthesize(t *testing.T) {
 	job := &topology.Job{}
 	source := httpapi.NewSource(job, "test-source", &httpapi.SourceParams{
-		Addr:   ":8080",
+		Addr:   topology.StringValue(":8080"),
 		Topics: []string{"events", "logs"},
 		KeyEvent: func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error) {
 			return nil, nil
@@ -26,7 +26,7 @@ func TestSourceSynthesize(t *testing.T) {
 		Id: "test-source",
 		Config: &jobconfigpb.Source_HttpApi{
 			HttpApi: &jobconfigpb.HTTPAPISource{
-				Addr:   ":8080",
+				Addr:   topology.StringValue(":8080").Proto(),
 				Topics: []string{"events", "logs"},
 			},
 		},

@@ -17,10 +17,10 @@ import (
 
 func TestJobSynthesizeConfig(t *testing.T) {
 	job := &topology.Job{
-		WorkerCount:              1,
+		WorkerCount:              topology.IntValue(1),
 		KeyGroupCount:            2,
-		WorkingStorageLocation:   "/tmp/work",
-		SavepointStorageLocation: "/tmp/save",
+		WorkingStorageLocation:   topology.StringValue("/tmp/work"),
+		SavepointStorageLocation: topology.StringValue("/tmp/save"),
 	}
 
 	sink := stdio.NewSink(job, "test-sink")
@@ -60,10 +60,10 @@ func TestJobSynthesizeConfig(t *testing.T) {
 
 	want := &jobconfigpb.JobConfig{
 		Job: &jobconfigpb.Job{
-			WorkerCount:              1,
+			WorkerCount:              topology.IntValue(1).Proto(),
 			KeyGroupCount:            2,
-			WorkingStorageLocation:   "/tmp/work",
-			SavepointStorageLocation: "/tmp/save",
+			WorkingStorageLocation:   topology.StringValue("/tmp/work").Proto(),
+			SavepointStorageLocation: topology.StringValue("/tmp/save").Proto(),
 		},
 		Sources: []*jobconfigpb.Source{{
 			Id: "test-source",

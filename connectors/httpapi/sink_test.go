@@ -12,7 +12,7 @@ import (
 func TestSinkSynthesize(t *testing.T) {
 	job := &topology.Job{}
 	sink := httpapi.NewSink(job, "test-sink", &httpapi.SinkParams{
-		Addr: "http://example.com/events",
+		Addr: topology.StringValue("http://example.com/events"),
 	})
 
 	synth := sink.Synthesize()
@@ -20,7 +20,7 @@ func TestSinkSynthesize(t *testing.T) {
 		Id: "test-sink",
 		Config: &jobconfigpb.Sink_HttpApi{
 			HttpApi: &jobconfigpb.HTTPAPISink{
-				Addr: "http://example.com/events",
+				Addr: topology.StringValue("http://example.com/events").Proto(),
 			},
 		},
 	}, synth.Config)

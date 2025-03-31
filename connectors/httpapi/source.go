@@ -10,14 +10,14 @@ import (
 
 type Source struct {
 	id        string
-	addr      string
+	addr      topology.ResolvableString
 	topics    []string
 	keyEvent  func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 	operators []*internal.Operator
 }
 
 type SourceParams struct {
-	Addr     string
+	Addr     topology.ResolvableString
 	Topics   []string
 	KeyEvent func(ctx context.Context, record []byte) ([]internal.KeyedEvent, error)
 }
@@ -45,7 +45,7 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 			Id: s.id,
 			Config: &jobconfigpb.Source_HttpApi{
 				HttpApi: &jobconfigpb.HTTPAPISource{
-					Addr:   s.addr,
+					Addr:   s.addr.Proto(),
 					Topics: s.topics,
 				},
 			},
