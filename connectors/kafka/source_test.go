@@ -61,8 +61,7 @@ func TestSource_KeyEventFunc(t *testing.T) {
 	require.NoError(t, err, "failed to marshal pbRecord")
 
 	var kafkaRecord *kafka.Record
-	job := &topology.Job{}
-	source := kafka.NewSource(job, "test-source", &kafka.SourceParams{
+	source := kafka.NewSource(&topology.Job{}, "test-source", &kafka.SourceParams{
 		ConsumerGroup: topology.StringValue("test-group"),
 		Brokers:       topology.StringValue("localhost:9092"),
 		Topics:        topology.StringValueList("topic"),
@@ -72,9 +71,9 @@ func TestSource_KeyEventFunc(t *testing.T) {
 		},
 	})
 
-	synth := source.Synthesize()
-	_, err = synth.KeyEventFunc(context.Background(), data)
+	_, err = source.Synthesize().KeyEventFunc(context.Background(), data)
 	require.NoError(t, err)
+
 	assert.Equal(t, kafkaRecord, &kafka.Record{
 		Key:       pbRecord.Key,
 		Value:     pbRecord.Value,

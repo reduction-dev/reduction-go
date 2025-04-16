@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/protobuf/proto"
 	"reduction.dev/reduction-go/internal"
@@ -18,19 +17,6 @@ type Source struct {
 	topics        topology.ResolvableString
 	keyEvent      func(ctx context.Context, record *Record) ([]internal.KeyedEvent, error)
 	operators     []*internal.Operator
-}
-
-type Record struct {
-	Key       []byte
-	Value     []byte
-	Topic     string
-	Headers   []Header
-	Timestamp time.Time
-}
-
-type Header struct {
-	Key   string
-	Value []byte
 }
 
 type SourceParams struct {
@@ -64,21 +50,7 @@ func (s *Source) Synthesize() internal.SourceSynthesis {
 				return nil, internal.NewBadRequestErrorf("failed to unmarshal record: %v", err)
 			}
 
-			headers := make([]Header, len(pbRecord.GetHeaders()))
-			for i, header := range pbRecord.GetHeaders() {
-				headers[i] = Header{
-					Key:   header.GetKey(),
-					Value: header.GetValue(),
-				}
-			}
-
-			return s.keyEvent(ctx, &Record{
-				Key:       pbRecord.GetKey(),
-				Value:     pbRecord.GetValue(),
-				Topic:     pbRecord.GetTopic(),
-				Headers:   headers,
-				Timestamp: pbRecord.GetTimestamp().AsTime(),
-			})
+			return s.keyEvent(ctx, newRecordFromProto(&pbRecord))
 		},
 		Operators: s.operators,
 		Config: &jobconfigpb.Source{
