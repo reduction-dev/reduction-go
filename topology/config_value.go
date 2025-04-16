@@ -1,6 +1,11 @@
 package topology
 
-import "reduction.dev/reduction-protocol/jobconfigpb"
+import (
+	"strings"
+
+	"reduction.dev/reduction-protocol/jobconfigpb"
+	"reduction.dev/reduction/util/ptr"
+)
 
 /** String **/
 
@@ -35,6 +40,13 @@ func StringValue(val string) ResolvableString {
 func StringParam(name string) ResolvableString {
 	return ResolvableString{
 		param: &name,
+	}
+}
+
+// StringValueList returns a ResolvableString but joins the values with a comma
+func StringValueList(values ...string) ResolvableString {
+	return ResolvableString{
+		value: ptr.New(strings.Join(values, ",")),
 	}
 }
 
