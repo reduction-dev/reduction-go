@@ -33,3 +33,5 @@ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 reduction.dev/reduction-protocol v0.0.3 h1:bj95wrjsP2teFZH8aaZighI4CGvHjGl18TT6/RUor1s=
 reduction.dev/reduction-protocol v0.0.3/go.mod h1:Rno4FyyZ2olmzTWeRfUHWsYv30Lcvcc1Dp6ci5urgpE=
+reduction.dev/reduction-protocol v0.0.4 h1:G4iDASHKpHdEu0VoStUJzA6l8sw8g9ZM9EsYQjYwZGA=
+reduction.dev/reduction-protocol v0.0.4/go.mod h1:Rno4FyyZ2olmzTWeRfUHWsYv30Lcvcc1Dp6ci5urgpE=

@@ -8,7 +8,7 @@ require (
 	connectrpc.com/connect v1.18.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.3
-	reduction.dev/reduction-protocol v0.0.3
+	reduction.dev/reduction-protocol v0.0.4
 )
 
 require (
