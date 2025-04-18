@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"reduction.dev/reduction-protocol/jobconfigpb"
-	"reduction.dev/reduction/util/ptr"
 )
 
 /** String **/
@@ -45,8 +44,9 @@ func StringParam(name string) ResolvableString {
 
 // StringValueList returns a ResolvableString but joins the values with a comma
 func StringValueList(values ...string) ResolvableString {
+	list := strings.Join(values, ",")
 	return ResolvableString{
-		value: ptr.New(strings.Join(values, ",")),
+		value: &list,
 	}
 }
 
